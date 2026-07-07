@@ -1,9 +1,5 @@
 const PROFILE_KEY = 'mundial.profile'
 const TOURNAMENT_KEY = 'mundial.activeTournament'
-const SIGNUPS_KEY = 'mundial.analytics.signups'
-const SIMULATIONS_KEY = 'mundial.analytics.simulations'
-const MAX_SIGNUPS = 1000
-const MAX_SIMULATIONS = 2000
 
 function safeParse(raw, fallback) {
   try {
@@ -37,28 +33,50 @@ export function clearActiveTournament() {
   localStorage.removeItem(TOURNAMENT_KEY)
 }
 
-// ---------- Analytics (client-side only -- stored per-browser in localStorage,
-// not a real cross-device backend. Used to power the /admin dashboard.) ----------
+// ---------- Analytics (shared across all visitors via serverless API +
+// Vercel KV -- see api/signup.js, api/simulation.js, api/admin-data.js.
+// Logging calls are fire-and-forget: a network hiccup should never block
+// the signup/celebration flow for the user, so failures are swallowed. ----------
 
-export function logSignup(profile) {
-  const list = safeParse(localStorage.getItem(SIGNUPS_KEY), [])
-  list.push({ ...profile, timestamp: Date.now() })
-  while (list.length > MAX_SIGNUPS) list.shift()
-  localStorage.setItem(SIGNUPS_KEY, JSON.stringify(list))
-}
-
-export function getSignups() {
-  return safeParse(localStorage.getItem(SIGNUPS_KEY), [])
+export async function logSignup(profile) {
+  try {
+    await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    })
+  } catch {
+    // best-effort only
+  }
 }
 
 // entry: { mode: 'historic' | 'custom' | 'wc2026', descriptor, winner, runnerUp, third, fourth }
-export function logSimulationResult(entry) {
-  const list = safeParse(localStorage.getItem(SIMULATIONS_KEY), [])
-  list.push({ ...entry, timestamp: Date.now() })
-  while (list.length > MAX_SIMULATIONS) list.shift()
-  localStorage.setItem(SIMULATIONS_KEY, JSON.stringify(list))
+export async function logSimulationResult(entry) {
+  try {
+    await fetch('/api/simulation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    })
+  } catch {
+    // best-effort only
+  }
 }
 
-export function getSimulationLog() {
-  return safeParse(localStorage.getItem(SIMULATIONS_KEY), [])
+// Fetches the full shared signup + simulation log for the admin dashboard.
+// The password is checked server-side (api/admin-data.js) against a secret
+// env var -- a wrong password genuinely gets no data back, not just a
+// hidden UI, unlike the old client-side-only gate.
+export async function fetchAdminData(password) {
+  try {
+    const res = await fetch('/api/admin-data', {
+      headers: { 'x-admin-password': password },
+    })
+    if (res.status === 401) return { ok: false, unauthorized: true }
+    if (!res.ok) return { ok: false, unauthorized: false }
+    const data = await res.json()
+    return { ok: true, signups: data.signups || [], simulations: data.simulations || [] }
+  } catch {
+    return { ok: false, unauthorized: false }
+  }
 }

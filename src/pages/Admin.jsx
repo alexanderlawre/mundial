@@ -1,13 +1,9 @@
 import { useMemo, useState } from 'react'
-import { getSignups, getSimulationLog } from '../lib/storage'
+import { fetchAdminData } from '../lib/storage'
 import { NATIONS } from '../data/nations'
 import AppBackground from '../components/AppBackground'
 import CountryFlag from '../components/CountryFlag'
 import SambaButton from '../components/SambaButton'
-
-// Client-side-only password gate. There is no backend in this app, so this
-// only deters casual access -- it is not real security. Change freely.
-const ADMIN_PASSWORD = 'mundial-admin'
 
 const NATIONS_BY_NAME = Object.fromEntries(NATIONS.map((n) => [n.name, n]))
 
@@ -202,10 +198,7 @@ function CustomTeamCountTable({ entries }) {
   )
 }
 
-function Dashboard() {
-  const signups = useMemo(() => getSignups(), [])
-  const log = useMemo(() => getSimulationLog(), [])
-
+function Dashboard({ signups, log, onRefresh, refreshing }) {
   const wc2026Entries = useMemo(() => log.filter((e) => e.mode === 'wc2026'), [log])
   const customEntries = useMemo(() => log.filter((e) => e.mode === 'custom'), [log])
   const historicEntries = useMemo(() => log.filter((e) => e.mode === 'historic'), [log])
@@ -215,8 +208,11 @@ function Dashboard() {
       <div className="text-center">
         <h1 className="font-display font-bold text-4xl tracking-wide text-forest">Mundial Admin</h1>
         <p className="text-charcoal-600 text-sm mt-1">
-          Personal usage log for this browser only -- there is no backend, so this data is not shared across devices/users.
+          Shared usage log across every visitor. Only visible here, behind the admin password.
         </p>
+        <SambaButton variant="outline" size="sm" className="mt-3" onClick={onRefresh} disabled={refreshing}>
+          {refreshing ? 'Refreshing…' : 'Refresh Data'}
+        </SambaButton>
       </div>
 
       <section className="space-y-3">
@@ -257,14 +253,29 @@ export default function Admin() {
   const [unlocked, setUnlocked] = useState(false)
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState({ signups: [], simulations: [] })
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
+    setLoading(true)
+    setError(false)
+    const result = await fetchAdminData(password)
+    setLoading(false)
+    if (result.ok) {
+      setData({ signups: result.signups, simulations: result.simulations })
       setUnlocked(true)
-      setError(false)
     } else {
       setError(true)
+    }
+  }
+
+  async function handleRefresh() {
+    setLoading(true)
+    const result = await fetchAdminData(password)
+    setLoading(false)
+    if (result.ok) {
+      setData({ signups: result.signups, simulations: result.simulations })
     }
   }
 
@@ -283,7 +294,9 @@ export default function Admin() {
               className="w-full px-4 py-2.5 rounded-xl border border-charcoal-900/15 focus:outline-none focus:ring-2 focus:ring-emerald"
             />
             {error && <p className="text-sm text-red-500 text-center">Incorrect password.</p>}
-            <SambaButton type="submit" variant="gold" className="w-full">Unlock</SambaButton>
+            <SambaButton type="submit" variant="gold" className="w-full" disabled={loading}>
+              {loading ? 'Checking…' : 'Unlock'}
+            </SambaButton>
           </form>
         </div>
       </AppBackground>
@@ -292,7 +305,7 @@ export default function Admin() {
 
   return (
     <AppBackground>
-      <Dashboard />
+      <Dashboard signups={data.signups} log={data.simulations} onRefresh={handleRefresh} refreshing={loading} />
     </AppBackground>
   )
 }
