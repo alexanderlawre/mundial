@@ -1,0 +1,127 @@
+import { generateSquad, seededRng } from './nameGenerator'
+
+// Knuth's algorithm for a Poisson-distributed random integer.
+function poissonRandom(lambda, rng) {
+  const L = Math.exp(-lambda)
+  let k = 0
+  let p = 1
+  do {
+    k++
+    p *= rng()
+  } while (p > L)
+  return k - 1
+}
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v))
+}
+
+// Expected goals for `team` given the rating gap vs the opponent.
+// Chaos is intentionally modest: a small random wobble plus a low flat
+// chance of an upset-flavored swing, so ratings/form drive results while
+// still allowing occasional surprises.
+function expectedGoals(ratingFor, ratingAgainst, rng) {
+  const gap = ratingFor - ratingAgainst
+  let xg = 1.25 + gap * 0.038
+  xg += (rng() - 0.5) * 0.35 // normal match-to-match variance
+  if (rng() < 0.03) xg += rng() * 0.5 // rare, smaller upset-flavored spike
+  return clamp(xg, 0.15, 4.2)
+}
+
+function simulateGoalMinutes(count, rng) {
+  const minutes = []
+  for (let i = 0; i < count; i++) minutes.push(Math.ceil(rng() * 90))
+  return minutes.sort((a, b) => a - b)
+}
+
+function buildScorers(count, squad, rng) {
+  const scorers = []
+  for (let i = 0; i < count; i++) {
+    scorers.push(squad[Math.floor(rng() * squad.length)])
+  }
+  return scorers
+}
+
+function simulateStats(teamA, teamB, scoreA, scoreB, rng) {
+  const ratingGap = teamA.rating - teamB.rating
+  let possA = clamp(50 + ratingGap * 0.6 + (rng() - 0.5) * 10, 24, 76)
+  const shotsA = clamp(Math.round(8 + scoreA * 1.6 + ratingGap * 0.05 + rng() * 4), 2, 24)
+  const shotsB = clamp(Math.round(8 + scoreB * 1.6 - ratingGap * 0.05 + rng() * 4), 2, 24)
+  const sotA = clamp(Math.round(shotsA * (0.35 + rng() * 0.2)), scoreA, shotsA)
+  const sotB = clamp(Math.round(shotsB * (0.35 + rng() * 0.2)), scoreB, shotsB)
+  const cardsA = Math.round(rng() * 3)
+  const cardsB = Math.round(rng() * 3)
+  return {
+    possessionA: Math.round(possA),
+    possessionB: Math.round(100 - possA),
+    shotsA, shotsB,
+    shotsOnTargetA: sotA, shotsOnTargetB: sotB,
+    cardsA, cardsB,
+  }
+}
+
+function simulatePenaltyShootout(teamA, teamB, rng) {
+  const takeRound = (rating) => rng() < clamp(0.62 + (rating - 60) * 0.004, 0.45, 0.9)
+  let a = 0, b = 0
+  const roundsA = [], roundsB = []
+  for (let round = 0; round < 5; round++) {
+    const scoredA = takeRound(teamA.rating)
+    roundsA.push(scoredA)
+    if (scoredA) a++
+    const scoredB = takeRound(teamB.rating)
+    roundsB.push(scoredB)
+    if (scoredB) b++
+  }
+  // Sudden death
+  while (a === b) {
+    const scoredA = takeRound(teamA.rating)
+    const scoredB = takeRound(teamB.rating)
+    roundsA.push(scoredA); roundsB.push(scoredB)
+    if (scoredA) a++
+    if (scoredB) b++
+    if (roundsA.length > 20) break // safety valve
+  }
+  return { penA: a, penB: b }
+}
+
+// teamA/teamB shape: { name, rating, confederation, colors, iso2 }
+export function simulateMatch(teamA, teamB, { knockout = false, seedKey = '' } = {}) {
+  const rng = seededRng(`${teamA.name}-${teamB.name}-${seedKey}-${Math.random()}`)
+  const xgA = expectedGoals(teamA.rating, teamB.rating, rng)
+  const xgB = expectedGoals(teamB.rating, teamA.rating, rng)
+  const scoreA = poissonRandom(xgA, rng)
+  const scoreB = poissonRandom(xgB, rng)
+
+  const squadA = generateSquad(teamA.name, teamA.confederation)
+  const squadB = generateSquad(teamB.name, teamB.confederation)
+
+  const minutesA = simulateGoalMinutes(scoreA, rng)
+  const minutesB = simulateGoalMinutes(scoreB, rng)
+  const scorersA = buildScorers(scoreA, squadA, rng).map((name, i) => ({ name, minute: minutesA[i] }))
+  const scorersB = buildScorers(scoreB, squadB, rng).map((name, i) => ({ name, minute: minutesB[i] }))
+
+  const stats = simulateStats(teamA, teamB, scoreA, scoreB, rng)
+
+  let penA = null, penB = null, wentToPenalties = false
+  if (knockout && scoreA === scoreB) {
+    wentToPenalties = true
+    const pens = simulatePenaltyShootout(teamA, teamB, rng)
+    penA = pens.penA
+    penB = pens.penB
+  }
+
+  const winner = wentToPenalties
+    ? (penA > penB ? teamA.name : teamB.name)
+    : (scoreA === scoreB ? null : (scoreA > scoreB ? teamA.name : teamB.name))
+
+  return {
+    teamA: teamA.name,
+    teamB: teamB.name,
+    scoreA, scoreB,
+    scorersA, scorersB,
+    stats,
+    wentToPenalties, penA, penB,
+    winner,
+    played: true,
+  }
+}
