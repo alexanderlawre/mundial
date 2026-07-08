@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv'
+import { Redis } from '@upstash/redis'
+
+const kv = Redis.fromEnv()
 
 const MAX_SIMULATIONS = 2000
 const SIMULATIONS_KEY = 'mundial:simulations'

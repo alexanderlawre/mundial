@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv'
+import { Redis } from '@upstash/redis'
+
+const kv = Redis.fromEnv()
 
 const MAX_SIGNUPS = 1000
 const SIGNUPS_KEY = 'mundial:signups'
