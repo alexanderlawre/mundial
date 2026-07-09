@@ -49,7 +49,7 @@ function NationPicker({ label, value, onChange }) {
       {value && (
         <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-gold/15 border border-gold">
           <CountryFlag nation={value} size="sm" />
-          <span className="text-sm font-medium">{value.name}</span>
+          <span className="text-sm font-medium text-charcoal-900 dark:text-sand">{value.name}</span>
           <span className="text-xs text-charcoal-600 dark:text-charcoal-300 ml-auto">{t('onboarding.selected')}</span>
         </div>
       )}
@@ -62,7 +62,7 @@ function NationPicker({ label, value, onChange }) {
               ${value?.name === n.name ? 'bg-mint ring-2 ring-emerald' : ''}`}
           >
             <CountryFlag nation={n} size="sm" />
-            <span className="truncate">{n.name}</span>
+            <span className="truncate text-charcoal-900 dark:text-sand">{n.name}</span>
           </button>
         ))}
         {filtered.length === 0 && (

@@ -183,7 +183,7 @@ export default function SimulatorSetup() {
                           ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
                         <CountryFlag nation={n} size="sm" />
-                        <span className="truncate">{n.name}</span>
+                        <span className="truncate text-charcoal-900 dark:text-sand">{n.name}</span>
                       </button>
                     )
                   })}

@@ -29,7 +29,7 @@ export default function ThirdPlacePicker({ rows, teamsByName, needed, selected, 
             >
               {team && <CountryFlag nation={team} size="sm" />}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{row.team} <span className="text-charcoal-600 dark:text-charcoal-300 text-xs">({t('play.grp', { letter: row.groupLetter })})</span></p>
+                <p className="text-sm font-medium text-charcoal-900 dark:text-sand truncate">{row.team} <span className="text-charcoal-600 dark:text-charcoal-300 text-xs">({t('play.grp', { letter: row.groupLetter })})</span></p>
                 {!row.isManual && (
                   <p className="text-xs text-charcoal-600 dark:text-charcoal-300 tabular-nums">{t('play.ptsGdGf', { points: row.points, gd: row.gd > 0 ? `+${row.gd}` : row.gd, gf: row.gf })}</p>
                 )}

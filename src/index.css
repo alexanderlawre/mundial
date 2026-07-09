@@ -12,6 +12,14 @@ body {
   color: #1E2422;
 }
 
+/* Safety-net fallback: any text left without an explicit dark: text-color
+   utility (inherited body color) would otherwise stay near-black and be
+   unreadable against the dark-mode background. This does not override
+   elements that already set their own explicit color class. */
+.dark body {
+  color: #F4EFE6;
+}
+
 .font-display {
   font-family: 'Poppins', system-ui, sans-serif;
 }

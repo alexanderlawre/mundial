@@ -169,11 +169,11 @@ export default function MatchCard({ match, teamA, teamB, label, variant = 'defau
       <div className="rounded-2xl bg-white/80 dark:bg-night-card/80 border border-charcoal-900/10 dark:border-white/10 shadow-depth p-4 flex items-center justify-between opacity-60">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <CountryFlag nation={teamA} size="sm" />
-          <span className="text-sm font-medium text-charcoal-600 truncate">{teamA.name}</span>
+          <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamA.name}</span>
         </div>
-        <span className="font-display text-charcoal-600 text-sm px-2 shrink-0">{t('play.vs')}</span>
+        <span className="font-display text-charcoal-600 dark:text-charcoal-300 text-sm px-2 shrink-0">{t('play.vs')}</span>
         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span className="text-sm font-medium text-charcoal-600 truncate">{teamB.name}</span>
+          <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamB.name}</span>
           <CountryFlag nation={teamB} size="sm" />
         </div>
       </div>
@@ -188,11 +188,11 @@ export default function MatchCard({ match, teamA, teamB, label, variant = 'defau
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <CountryFlag nation={teamA} size="sm" />
-                <span className="text-sm font-medium text-charcoal-600 truncate">{teamA.name}</span>
+                <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamA.name}</span>
               </div>
-              <span className="font-display text-charcoal-600 text-sm px-2 shrink-0">{t('play.vs')}</span>
+              <span className="font-display text-charcoal-600 dark:text-charcoal-300 text-sm px-2 shrink-0">{t('play.vs')}</span>
               <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                <span className="text-sm font-medium text-charcoal-600 truncate">{teamB.name}</span>
+                <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamB.name}</span>
                 <CountryFlag nation={teamB} size="sm" />
               </div>
             </div>

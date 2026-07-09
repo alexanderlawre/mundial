@@ -35,7 +35,7 @@ export default function GroupTable({ letter, standings, teamsByName, advanceCoun
                       {team.fifaCode}
                     </span>
                   )}
-                  <span className="font-medium truncate">{row.team}</span>
+                  <span className="font-medium text-charcoal-900 dark:text-sand truncate">{row.team}</span>
                 </td>
                 <td className="text-center">{row.played}</td>
                 <td className="text-center">{row.won}</td>

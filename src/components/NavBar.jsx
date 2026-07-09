@@ -1,8 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../lib/i18n'
 
-// Back arrow (defaults to browser history back) + home icon, shared across
-// every page so users can always navigate away without getting stuck.
+// Back arrow (defaults to browser history back), shared across every page so
+// users can always navigate away without getting stuck. The Home icon lives
+// in the global HeaderControls row (top-right, alongside the theme toggle
+// and language selector) rather than here, so it stays in the same place on
+// every page instead of duplicating per-page.
 export default function NavBar({ title, subtitle, onBack }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -23,16 +26,6 @@ export default function NavBar({ title, subtitle, onBack }) {
           {subtitle && <p className="text-charcoal-600 dark:text-charcoal-300 text-sm truncate">{subtitle}</p>}
         </div>
       )}
-      <button
-        onClick={() => navigate('/dashboard')}
-        aria-label={t('common.home')}
-        className="w-9 h-9 shrink-0 rounded-full bg-white dark:bg-night-card shadow-depth border border-charcoal-900/10 dark:border-white/10 flex items-center justify-center text-charcoal-900 dark:text-sand hover:bg-sand dark:hover:bg-night active:scale-95 transition-all"
-      >
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 11.5L12 4l9 7.5" />
-          <path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9" />
-        </svg>
-      </button>
     </div>
   )
 }

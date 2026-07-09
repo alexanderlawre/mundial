@@ -3,8 +3,7 @@
 // distracting. Kept low-opacity and blurred, behind all foreground content.
 
 import Footer from './Footer'
-import ThemeToggle from './ThemeToggle'
-import LanguageSelector from './LanguageSelector'
+import HeaderControls from './HeaderControls'
 
 function Blob({ className, color }) {
   return (
@@ -24,8 +23,7 @@ export default function AppBackground({ children }) {
       <Blob className="bottom-[-10rem] right-1/4 w-[26rem] h-[26rem] opacity-25 dark:opacity-15 animate-float" color="#0B3D2E" />
       <Blob className="bottom-0 -left-16 w-72 h-72 opacity-20 dark:opacity-10 animate-float-slow" color="#3E5C3A" />
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-transparent via-sand/30 to-sand dark:via-night/30 dark:to-night" />
-      <ThemeToggle />
-      <LanguageSelector />
+      <HeaderControls />
       <div className="relative z-10 flex-1">{children}</div>
       <Footer />
     </div>

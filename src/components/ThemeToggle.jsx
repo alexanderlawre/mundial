@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getTheme, toggleTheme } from '../lib/theme'
 
-// Sun/moon toggle, rendered once by AppBackground (fixed corner) so it's
-// available on every page regardless of whether that page uses NavBar.
+// Sun/moon toggle. Rendered as part of HeaderControls (top-right icon row,
+// alongside Home and the language selector) so it's available on every page
+// regardless of whether that page uses NavBar.
 export default function ThemeToggle() {
   const [theme, setThemeState] = useState(getTheme())
 
@@ -18,7 +19,7 @@ export default function ThemeToggle() {
     <button
       onClick={handleClick}
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="fixed top-4 right-4 z-30 w-9 h-9 rounded-full bg-white dark:bg-night-card shadow-depth border border-charcoal-900/10 dark:border-white/10 flex items-center justify-center text-charcoal-900 dark:text-sand hover:bg-sand dark:hover:bg-night active:scale-95 transition-all"
+      className="w-9 h-9 shrink-0 rounded-full bg-white dark:bg-night-card shadow-depth border border-charcoal-900/10 dark:border-white/10 flex items-center justify-center text-charcoal-900 dark:text-sand hover:bg-sand dark:hover:bg-night active:scale-95 transition-all"
     >
       {theme === 'dark' ? (
         <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

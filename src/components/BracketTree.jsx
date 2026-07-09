@@ -62,7 +62,7 @@ function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMa
             >
               <span className="flex items-center gap-2 min-w-0">
                 <CountryFlag nation={team} size="sm" />
-                <span className="truncate text-sm">{team.name}</span>
+                <span className="truncate text-sm text-charcoal-900 dark:text-sand">{team.name}</span>
               </span>
               {played && (
                 <span className="font-display tabular-nums font-semibold shrink-0">

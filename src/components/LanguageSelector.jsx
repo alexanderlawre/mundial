@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { LANGUAGES, useTranslation } from '../lib/i18n'
 
-// Flag-based language selector, rendered once by AppBackground (fixed
-// top-left corner) so it's available on every page regardless of whether
-// that page uses NavBar -- mirrors ThemeToggle's placement pattern
-// (top-right).
+// Flag-based language selector. Rendered as part of HeaderControls (top-right
+// icon row, outermost/rightmost of the group -- Home, then theme toggle,
+// then this) so it's available on every page regardless of whether that page
+// uses NavBar.
 export default function LanguageSelector() {
   const { language, setLanguage } = useTranslation()
   const [open, setOpen] = useState(false)
   const current = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0]
 
   return (
-    <div className="fixed top-4 left-4 z-30">
+    <div className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Change language"
@@ -23,7 +23,7 @@ export default function LanguageSelector() {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-11 z-20 w-40 rounded-xl bg-white dark:bg-night-card shadow-depth-lg border border-charcoal-900/10 dark:border-white/10 overflow-hidden py-1">
+          <div className="absolute right-0 top-11 z-20 w-40 rounded-xl bg-white dark:bg-night-card shadow-depth-lg border border-charcoal-900/10 dark:border-white/10 overflow-hidden py-1">
             {LANGUAGES.map((l) => (
               <button
                 key={l.code}
