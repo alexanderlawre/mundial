@@ -24,7 +24,7 @@ export default function SimulatorPlay() {
     return (
       <AppBackground>
         <div className="max-w-xl mx-auto px-4 py-16 text-center">
-          <p className="text-charcoal-600 mb-4">No tournament in progress. Please start from setup.</p>
+          <p className="text-charcoal-600 dark:text-charcoal-300 mb-4">No tournament in progress. Please start from setup.</p>
           <SambaButton onClick={() => navigate('/simulator/setup')}>Back to Setup</SambaButton>
         </div>
       </AppBackground>

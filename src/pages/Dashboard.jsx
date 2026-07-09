@@ -4,26 +4,27 @@ import { getNation } from '../data/nations'
 import CountryFlag from '../components/CountryFlag'
 import SambaButton from '../components/SambaButton'
 import AppBackground from '../components/AppBackground'
+import { useTranslation } from '../lib/i18n'
 
 const MODES = [
   {
     key: 'simulator',
-    title: 'World Cup Simulator',
-    desc: 'Build your own 32 or 48-team World Cup. Pick or simulate qualifying, arrange the draw, and play it out.',
+    titleKey: 'dashboard.simulatorTitle',
+    descKey: 'dashboard.simulatorDesc',
     path: '/simulator/setup',
     accent: 'bg-emerald',
   },
   {
     key: 'wc2026',
-    title: 'World Cup 2026',
-    desc: 'The real 2026 tournament: official 12 groups across the USA, Canada & Mexico.',
+    titleKey: 'dashboard.wc2026Title',
+    descKey: 'dashboard.wc2026Desc',
     path: '/wc2026',
     accent: 'bg-forest',
   },
   {
     key: 'historic',
-    title: 'Historic World Cups',
-    desc: 'Replay any World Cup from 1930 to 2022 with the real qualified teams and host nation.',
+    titleKey: 'dashboard.historicTitle',
+    descKey: 'dashboard.historicDesc',
     path: '/historic',
     accent: 'bg-olive',
   },
@@ -31,6 +32,7 @@ const MODES = [
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const profile = getProfile()
   const supported = profile ? getNation(profile.supportedCountry) : null
 
@@ -47,14 +49,14 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             {supported && <CountryFlag nation={supported} size="lg" />}
             <div>
-              <h1 className="font-display font-bold text-3xl tracking-wide text-forest">MUNDIAL</h1>
-              <p className="text-charcoal-600 text-sm font-medium">
-                {profile ? `Welcome, ${profile.name}` : 'Welcome to Mundial'}
+              <h1 className="font-display font-bold text-3xl tracking-wide text-forest dark:text-mint">MUNDIAL</h1>
+              <p className="text-charcoal-600 dark:text-charcoal-300 text-sm font-medium">
+                {profile ? t('dashboard.welcomeName', { name: profile.name }) : t('dashboard.welcomeGeneric')}
               </p>
-              {supported && <p className="text-charcoal-600 text-sm">Supporting {supported.name}</p>}
+              {supported && <p className="text-charcoal-600 dark:text-charcoal-300 text-sm">{t('dashboard.supporting', { name: supported.name })}</p>}
             </div>
           </div>
-          <SambaButton variant="outline" size="sm" onClick={handleReset}>Reset Profile</SambaButton>
+          <SambaButton variant="outline" size="sm" onClick={handleReset}>{t('dashboard.resetProfile')}</SambaButton>
         </div>
 
         <div className="grid gap-5">
@@ -62,12 +64,12 @@ export default function Dashboard() {
             <button
               key={mode.key}
               onClick={() => navigate(mode.path)}
-              className="text-left rounded-2xl bg-white shadow-depth-lg overflow-hidden hover:-translate-y-1 active:scale-[0.99] transition-all"
+              className="text-left rounded-2xl bg-white dark:bg-night-card shadow-depth-lg overflow-hidden hover:-translate-y-1 active:scale-[0.99] transition-all"
             >
               <div className={`h-2 ${mode.accent}`} />
               <div className="p-6">
-                <h2 className="font-display text-xl font-bold text-charcoal-900">{mode.title}</h2>
-                <p className="text-charcoal-600 mt-1 text-sm">{mode.desc}</p>
+                <h2 className="font-display text-xl font-bold text-charcoal-900 dark:text-sand">{t(mode.titleKey)}</h2>
+                <p className="text-charcoal-600 dark:text-charcoal-300 mt-1 text-sm">{t(mode.descKey)}</p>
               </div>
             </button>
           ))}

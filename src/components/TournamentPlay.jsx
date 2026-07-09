@@ -23,6 +23,7 @@ import TournamentSummary from './TournamentSummary'
 import SambaButton from './SambaButton'
 import CountryFlag from './CountryFlag'
 import NavBar from './NavBar'
+import { useTranslation, translateRoundLabel } from '../lib/i18n'
 
 // Synthetic standings rows for a manually-ranked group -- shaped identically
 // to computeStandings()'s output (team/played/won/drawn/lost/gf/ga/gd/points/
@@ -50,19 +51,20 @@ function manualStandingRows(order) {
 // order (rank + flag + name) -- no points/W-D-L/GD, since none of that was
 // actually played out.
 function ManualStandingsList({ letter, order, teamsByName, advanceCount }) {
+  const { t } = useTranslation()
   return (
-    <div className="rounded-2xl bg-white border border-charcoal-900/10 shadow-depth overflow-hidden">
-      <div className="px-4 py-2 bg-forest text-white font-display font-semibold">Group {letter}</div>
+    <div className="rounded-2xl bg-white dark:bg-night-card border border-charcoal-900/10 dark:border-white/10 shadow-depth overflow-hidden">
+      <div className="px-4 py-2 bg-forest text-white font-display font-semibold">{t('play.group', { letter })}</div>
       <div className="divide-y divide-charcoal-900/5">
         {order.map((name, i) => {
           const team = teamsByName[name]
           const advances = i < advanceCount
           return (
             <div key={name} className={`flex items-center gap-2 px-4 py-2 text-sm ${advances ? 'bg-mint/40' : ''}`}>
-              <span className="text-xs text-charcoal-600 w-4">{i + 1}</span>
+              <span className="text-xs text-charcoal-600 dark:text-charcoal-300 w-4">{i + 1}</span>
               {team && <CountryFlag nation={team} size="sm" />}
               {team?.fifaCode && (
-                <span className="font-display text-[10px] font-bold tracking-widest text-charcoal-600 bg-charcoal-900/5 rounded px-1.5 py-0.5 w-10 text-center shrink-0 tabular-nums">
+                <span className="font-display text-[10px] font-bold tracking-widest text-charcoal-600 dark:text-charcoal-300 bg-charcoal-900/5 rounded px-1.5 py-0.5 w-10 text-center shrink-0 tabular-nums">
                   {team.fifaCode}
                 </span>
               )}
@@ -78,6 +80,7 @@ function ManualStandingsList({ letter, order, teamsByName, advanceCount }) {
 // Per-group panel shown when a group is in 'manual' mode: a reorder list
 // until confirmed, then a read-only team-order list (no stats) with an Edit toggle.
 function ManualGroupPanel({ letter, teams, teamsByName, advanceCount, manualOrder, onConfirm, onBackToPicker }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(!manualOrder)
 
   if (editing) {
@@ -95,7 +98,7 @@ function ManualGroupPanel({ letter, teams, teamsByName, advanceCount, manualOrde
     <div className="space-y-2">
       <ManualStandingsList letter={letter} order={manualOrder} teamsByName={teamsByName} advanceCount={advanceCount} />
       <SambaButton size="sm" variant="outline" className="w-full" onClick={() => setEditing(true)}>
-        Edit Standings
+        {t('play.editStandings')}
       </SambaButton>
     </div>
   )
@@ -130,6 +133,7 @@ export default function TournamentPlay({
   mode,                   // 'historic' | 'custom' | 'wc2026' -- for analytics logging
   descriptor,             // year (historic) / team count (custom) / '2026' (wc2026) -- for analytics logging
 }) {
+  const { t } = useTranslation()
   const teamsByName = useMemo(() => {
     const map = {}
     if (initialGroups) {
@@ -331,7 +335,14 @@ export default function TournamentPlay({
       const round = { ...next[next.length - 1] }
       round.matches = round.matches.map((m) => {
         if (m.id !== id || m.result) return m
-        return { ...m, result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], { knockout: true, seedKey: id }) }
+        return {
+          ...m,
+          result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], {
+            knockout: true,
+            seedKey: id,
+            roundSize: round.matches.length * 2,
+          }),
+        }
       })
       next[next.length - 1] = round
       return next
@@ -374,7 +385,14 @@ export default function TournamentPlay({
       if (idx === -1) return prev
       const m = round.matches[idx]
       const matches = [...round.matches]
-      matches[idx] = { ...m, result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], { knockout: true, seedKey: m.id }) }
+      matches[idx] = {
+        ...m,
+        result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], {
+          knockout: true,
+          seedKey: m.id,
+          roundSize: round.matches.length * 2,
+        }),
+      }
       round.matches = matches
       next[next.length - 1] = round
       return next
@@ -386,7 +404,16 @@ export default function TournamentPlay({
       const next = [...prev]
       const round = { ...next[next.length - 1] }
       round.matches = round.matches.map((m) => (
-        m.result ? m : { ...m, result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], { knockout: true, seedKey: m.id }) }
+        m.result
+          ? m
+          : {
+              ...m,
+              result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], {
+                knockout: true,
+                seedKey: m.id,
+                roundSize: round.matches.length * 2,
+              }),
+            }
       ))
       next[next.length - 1] = round
       return next
@@ -471,12 +498,12 @@ export default function TournamentPlay({
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         <Header title={title} hostLabel={hostLabel} />
         <div className="flex gap-2 flex-wrap">
-          <SambaButton onClick={simulateOneGroupMatch} disabled={!anySimulatableGroupMatchLeft}>Simulate Next Match</SambaButton>
+          <SambaButton onClick={simulateOneGroupMatch} disabled={!anySimulatableGroupMatchLeft}>{t('play.simulateNext')}</SambaButton>
           <SambaButton variant="secondary" onClick={simulateAllGroupMatches} disabled={!anySimulatableGroupMatchLeft}>
-            Simulate Rest of Group Stage
+            {t('play.simulateRestGroup')}
           </SambaButton>
           {allGroupMatchesDone && (
-            <SambaButton variant="gold" onClick={goToGroupReview}>View Group Results</SambaButton>
+            <SambaButton variant="gold" onClick={goToGroupReview}>{t('play.viewGroupResults')}</SambaButton>
           )}
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -490,8 +517,8 @@ export default function TournamentPlay({
             const mode = groupMode[letter]
             const showManual = interactivity === 'full' && mode === 'manual'
             return (
-              <div key={letter} className="rounded-2xl bg-white/70 shadow-depth p-3 space-y-3">
-                <p className="font-display font-semibold text-charcoal-900">Group {letter}</p>
+              <div key={letter} className="rounded-2xl bg-white/70 dark:bg-night-card/70 shadow-depth p-3 space-y-3">
+                <p className="font-display font-semibold text-charcoal-900 dark:text-sand">{t('play.group', { letter })}</p>
                 {interactivity === 'full' && (
                   <div className="grid grid-cols-2 gap-2">
                     <SambaButton
@@ -499,14 +526,14 @@ export default function TournamentPlay({
                       variant={mode === 'manual' ? 'outline' : 'primary'}
                       onClick={() => chooseGroupMode(letter, 'simulate')}
                     >
-                      Simulate Matches
+                      {t('play.simulateMatches')}
                     </SambaButton>
                     <SambaButton
                       size="sm"
                       variant={mode === 'manual' ? 'primary' : 'outline'}
                       onClick={() => chooseGroupMode(letter, 'manual')}
                     >
-                      Set Final Standings
+                      {t('play.setFinalStandings')}
                     </SambaButton>
                   </div>
                 )}
@@ -534,7 +561,7 @@ export default function TournamentPlay({
                     )}
                     {playedIdxs.length > 0 && (
                       <div className="space-y-1.5 pt-1">
-                        <p className="text-[11px] uppercase tracking-wide text-charcoal-600/70 font-semibold">Past Results</p>
+                        <p className="text-[11px] uppercase tracking-wide text-charcoal-600/70 font-semibold">{t('play.pastResults')}</p>
                         {playedIdxs.map((idx) => (
                           <MatchCard
                             key={idx}
@@ -561,7 +588,7 @@ export default function TournamentPlay({
   if (stage === 'group_review') {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        <Header title={title} hostLabel={hostLabel} subtitle="Group Stage Results" />
+        <Header title={title} hostLabel={hostLabel} subtitle={t('play.groupStageResults')} />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(groupStandings).map(([letter, rows]) => (
             groupMode[letter] === 'manual' ? (
@@ -578,9 +605,9 @@ export default function TournamentPlay({
           ))}
         </div>
         <div className="flex justify-center gap-2">
-          <SambaButton variant="outline" size="lg" onClick={() => setStage('groups')}>Back to Matches</SambaButton>
+          <SambaButton variant="outline" size="lg" onClick={() => setStage('groups')}>{t('play.backToMatches')}</SambaButton>
           <SambaButton variant="primary" size="lg" onClick={proceedFromReview}>
-            {format.bestThirds > 0 ? 'Continue to Third-Place Selection' : 'Continue to Knockouts'}
+            {format.bestThirds > 0 ? t('play.continueThirdPlace') : t('play.continueKnockouts')}
           </SambaButton>
         </div>
       </div>
@@ -590,7 +617,7 @@ export default function TournamentPlay({
   if (stage === 'third_place_pick') {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <Header title={title} hostLabel={hostLabel} subtitle="Best Third-Place Teams" />
+        <Header title={title} hostLabel={hostLabel} subtitle={t('play.bestThirdPlace')} />
         <ThirdPlacePicker
           rows={thirdPlaceRows}
           teamsByName={teamsByName}
@@ -606,7 +633,7 @@ export default function TournamentPlay({
             disabled={thirdPlaceSelected.length !== format.bestThirds}
             onClick={() => startKnockout(thirdPlaceSelected)}
           >
-            Confirm &amp; Start Knockouts
+            {t('play.confirmStartKnockouts')}
           </SambaButton>
         </div>
       </div>
@@ -617,14 +644,14 @@ export default function TournamentPlay({
     const isFinalRound = currentRound.matches.some((m) => m.label)
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <Header title={title} hostLabel={hostLabel} subtitle={currentRound.label} />
+        <Header title={title} hostLabel={hostLabel} subtitle={translateRoundLabel(currentRound.label, t)} />
         <div className="flex gap-2 flex-wrap">
-          <SambaButton onClick={simulateOneKnockoutMatch} disabled={roundComplete}>Simulate Next Match</SambaButton>
+          <SambaButton onClick={simulateOneKnockoutMatch} disabled={roundComplete}>{t('play.simulateNext')}</SambaButton>
           <SambaButton variant="secondary" onClick={simulateAllKnockoutMatches} disabled={roundComplete}>
-            Simulate Rest of Round
+            {t('play.simulateRestRound')}
           </SambaButton>
           {roundComplete && (
-            <SambaButton variant="gold" onClick={continueAfterRound}>Continue</SambaButton>
+            <SambaButton variant="gold" onClick={continueAfterRound}>{t('play.continue')}</SambaButton>
           )}
         </div>
         {isFinalRound ? (
@@ -641,7 +668,7 @@ export default function TournamentPlay({
                 />
                 {!m.result && (
                   <SambaButton size="sm" variant="outline" className="w-full" onClick={() => simulateKnockoutMatchById(m.id)}>
-                    Simulate {m.label}
+                    {t('play.simulateMatch', { label: translateRoundLabel(m.label, t) })}
                   </SambaButton>
                 )}
               </div>
@@ -674,11 +701,11 @@ export default function TournamentPlay({
         <div className="text-left mb-8">
           <NavBar title={title} subtitle={hostLabel} />
         </div>
-        <p className="uppercase tracking-widest text-gold font-semibold mb-3">Champions</p>
+        <p className="uppercase tracking-widest text-gold font-semibold mb-3">{t('play.champions')}</p>
         <div className="flex flex-col items-center gap-4 mb-6">
           <CountryFlag nation={championTeam} size="xl" />
-          <h1 className="font-display text-4xl font-extrabold text-forest">{champion}</h1>
-          <p className="text-charcoal-600">{title}{hostLabel ? ` · ${hostLabel}` : ''}</p>
+          <h1 className="font-display text-4xl font-extrabold text-forest dark:text-mint">{champion}</h1>
+          <p className="text-charcoal-600 dark:text-charcoal-300">{title}{hostLabel ? ` · ${hostLabel}` : ''}</p>
         </div>
         <div className="mb-6">
           <TournamentSummary
@@ -693,7 +720,7 @@ export default function TournamentPlay({
         </div>
         <BracketView history={bracketHistory} teamsByName={teamsByName} userNation={userNation} />
         <div className="mt-8">
-          <SambaButton variant="gold" size="lg" onClick={onRestart}>Simulate Again</SambaButton>
+          <SambaButton variant="gold" size="lg" onClick={onRestart}>{t('play.simulateAgain')}</SambaButton>
         </div>
       </div>
     )

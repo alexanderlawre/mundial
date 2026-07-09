@@ -2,7 +2,7 @@ const VARIANTS = {
   primary: 'bg-emerald text-white hover:bg-emerald/90',
   secondary: 'bg-mint text-emerald hover:bg-mint/80',
   gold: 'bg-gradient-to-r from-gold to-gold-light text-charcoal-900 shadow-depth-gold hover:brightness-105',
-  outline: 'bg-white text-charcoal-900 border border-charcoal-900/15 hover:bg-sand',
+  outline: 'bg-white dark:bg-night-card text-charcoal-900 dark:text-sand border border-charcoal-900/15 dark:border-white/15 hover:bg-sand dark:hover:bg-night',
   danger: 'bg-charcoal-900 text-red-400 hover:bg-charcoal-900/90',
 }
 

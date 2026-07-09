@@ -25,7 +25,7 @@ export default function GroupDraw() {
     return (
       <AppBackground>
         <div className="max-w-xl mx-auto px-4 py-16 text-center">
-          <p className="text-charcoal-600 mb-4">No team selection found. Please start from setup.</p>
+          <p className="text-charcoal-600 dark:text-charcoal-300 mb-4">No team selection found. Please start from setup.</p>
           <SambaButton onClick={() => navigate('/simulator/setup')}>Back to Setup</SambaButton>
         </div>
       </AppBackground>
@@ -80,8 +80,8 @@ export default function GroupDraw() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(groups).map(([letter, groupTeams]) => (
-            <div key={letter} className="rounded-2xl bg-white/80 shadow-depth p-3">
-              <p className="font-display font-semibold text-charcoal-900 mb-2">Group {letter}</p>
+            <div key={letter} className="rounded-2xl bg-white/80 dark:bg-night-card/80 shadow-depth p-3">
+              <p className="font-display font-semibold text-charcoal-900 dark:text-sand mb-2">Group {letter}</p>
               <div className="space-y-2">
                 {groupTeams.map((team, i) => (
                   <TeamBadge

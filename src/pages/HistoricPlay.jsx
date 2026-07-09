@@ -46,7 +46,7 @@ export default function HistoricPlay() {
     return (
       <AppBackground>
         <div className="max-w-xl mx-auto px-4 py-16 text-center">
-          <p className="text-charcoal-600 mb-4">No World Cup found for {year}.</p>
+          <p className="text-charcoal-600 dark:text-charcoal-300 mb-4">No World Cup found for {year}.</p>
           <SambaButton onClick={() => navigate('/historic')}>Back to Historic Cups</SambaButton>
         </div>
       </AppBackground>

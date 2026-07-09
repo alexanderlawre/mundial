@@ -115,17 +115,17 @@ export default function SimulatorSetup() {
           <div className="text-left mb-8">
             <NavBar />
           </div>
-          <h1 className="font-display text-3xl font-extrabold text-forest mb-2">Custom World Cup</h1>
-          <p className="text-charcoal-600 mb-8">How many teams should compete?</p>
+          <h1 className="font-display text-3xl font-extrabold text-forest dark:text-mint mb-2">Custom World Cup</h1>
+          <p className="text-charcoal-600 dark:text-charcoal-300 mb-8">How many teams should compete?</p>
           <div className="grid sm:grid-cols-2 gap-5">
             {[32, 48].map((n) => (
               <button
                 key={n}
                 onClick={() => setTeamCount(n)}
-                className="rounded-2xl bg-white shadow-depth-lg p-8 hover:-translate-y-1 transition-all"
+                className="rounded-2xl bg-white dark:bg-night-card shadow-depth-lg p-8 hover:-translate-y-1 transition-all"
               >
                 <p className="font-display text-4xl font-extrabold text-emerald">{n}</p>
-                <p className="text-charcoal-600 mt-2">{n === 32 ? 'Classic format (pre-2026)' : '2026 format · 12 groups of 4'}</p>
+                <p className="text-charcoal-600 dark:text-charcoal-300 mt-2">{n === 32 ? 'Classic format (pre-2026)' : '2026 format · 12 groups of 4'}</p>
               </button>
             ))}
           </div>
@@ -160,10 +160,10 @@ export default function SimulatorSetup() {
             )
             const selected = picked[conf] || []
             return (
-              <div key={conf} className="rounded-2xl bg-white shadow-depth p-4">
+              <div key={conf} className="rounded-2xl bg-white dark:bg-night-card shadow-depth p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-display font-semibold text-charcoal-900">
-                    {conf} <span className="text-charcoal-600 text-sm tabular-nums">({selected.length}/{quota})</span>
+                  <h2 className="font-display font-semibold text-charcoal-900 dark:text-sand">
+                    {conf} <span className="text-charcoal-600 dark:text-charcoal-300 text-sm tabular-nums">({selected.length}/{quota})</span>
                   </h2>
                   <SambaButton variant="secondary" size="sm" onClick={() => simulateQualifyingForConf(conf)}>
                     Simulate Qualifying
@@ -179,7 +179,7 @@ export default function SimulatorSetup() {
                         disabled={disabled}
                         onClick={() => togglePick(conf, n.name)}
                         className={`flex items-center gap-2 px-2 py-2 rounded-lg text-left text-sm transition-all
-                          ${isSelected ? 'bg-mint ring-2 ring-emerald' : 'hover:bg-sand'}
+                          ${isSelected ? 'bg-mint ring-2 ring-emerald' : 'hover:bg-sand dark:hover:bg-night'}
                           ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
                         <CountryFlag nation={n} size="sm" />
@@ -194,11 +194,11 @@ export default function SimulatorSetup() {
         </div>
 
         {teamCount === 48 && directPicksDone && (
-          <div className="rounded-2xl bg-white shadow-depth p-4 mt-6 space-y-5">
+          <div className="rounded-2xl bg-white dark:bg-night-card shadow-depth p-4 mt-6 space-y-5">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h2 className="font-display font-semibold text-charcoal-900">Intercontinental Playoff</h2>
-                <p className="text-charcoal-600 text-sm">The final 2 slots are decided by two 3-team mini-knockouts.</p>
+                <h2 className="font-display font-semibold text-charcoal-900 dark:text-sand">Intercontinental Playoff</h2>
+                <p className="text-charcoal-600 dark:text-charcoal-300 text-sm">The final 2 slots are decided by two 3-team mini-knockouts.</p>
               </div>
               <SambaButton variant="secondary" size="sm" onClick={autoFillPlayoffEntrants}>Auto-fill Entrants</SambaButton>
             </div>
@@ -207,8 +207,8 @@ export default function SimulatorSetup() {
               const result = playoffResults[pathIdx]
               const allPicked = entrants.every((n) => n)
               return (
-                <div key={path.id} className="rounded-xl bg-sand/40 p-3 space-y-3">
-                  <p className="text-xs uppercase tracking-wide text-charcoal-600 font-semibold">
+                <div key={path.id} className="rounded-xl bg-sand/40 dark:bg-night/40 p-3 space-y-3">
+                  <p className="text-xs uppercase tracking-wide text-charcoal-600 dark:text-charcoal-300 font-semibold">
                     Path {pathIdx + 1}: {path.legs[0]} v {path.legs[1]}, winner v {path.legs[2]}
                   </p>
                   <div className="grid sm:grid-cols-3 gap-3">
@@ -219,9 +219,9 @@ export default function SimulatorSetup() {
                         .sort((a, b) => getRating(b.name, conf) - getRating(a.name, conf))
                       return (
                         <div key={legIdx}>
-                          <p className="text-[11px] text-charcoal-600 mb-1">{conf}{legIdx === 2 ? ' (bye)' : ''}</p>
+                          <p className="text-[11px] text-charcoal-600 dark:text-charcoal-300 mb-1">{conf}{legIdx === 2 ? ' (bye)' : ''}</p>
                           <select
-                            className="w-full rounded-lg border border-charcoal-900/10 px-2 py-1.5 text-sm bg-white"
+                            className="w-full rounded-lg border border-charcoal-900/10 dark:border-white/10 px-2 py-1.5 text-sm bg-white dark:bg-night-card"
                             value={selectedName || ''}
                             onChange={(e) => setPlayoffEntrant(pathIdx, legIdx, e.target.value)}
                           >
@@ -259,7 +259,7 @@ export default function SimulatorSetup() {
                         teamB={buildTeam(entrants[2])}
                         label="Final"
                       />
-                      <p className="text-center text-sm text-charcoal-900 font-semibold">Winner: {result.winner}</p>
+                      <p className="text-center text-sm text-charcoal-900 dark:text-sand font-semibold">Winner: {result.winner}</p>
                     </div>
                   )}
                 </div>

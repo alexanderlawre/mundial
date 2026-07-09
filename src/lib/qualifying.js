@@ -2,18 +2,31 @@ import { NATIONS, nationsByConfederation } from '../data/nations'
 import { getRating } from '../data/ratings'
 import { seededRng } from './nameGenerator'
 
-// Exponential rating-to-weight curve: steep enough that the #1-rated team in
-// a confederation's qualifying pool wins one of the quota slots the vast
-// majority of the time (~98-99%+), while the weakest, default-rated teams
-// have a near-negligible (well under 0.1%, often under 0.01%) chance --
-// tuned via Monte Carlo simulation against this app's real confederation
-// pool sizes and quotas (UEFA 55 nations/16 slots, CAF 54/9, AFC 46/8,
-// CONCACAF 35/6, CONMEBOL 10/6, OFC 11/1). The previous rating^2 weighting
-// only produced a ~2x weight spread across a typical 20-point rating gap --
-// nowhere close to real-world qualifying odds, where a top-10 side and a
-// minnow are practically never fighting for the same slot.
+// Exponential rating-to-weight curve: steep enough that a clear top-tier
+// team in a confederation's qualifying pool wins one of the quota slots the
+// large majority of the time, while the weakest, default-rated teams still
+// have a small but genuinely non-negligible chance -- tuned against this
+// app's real confederation pool sizes and quotas (UEFA 55 nations/16 slots,
+// CAF 54/9, AFC 46/8, CONCACAF 35/6, CONMEBOL 10/6, OFC 11/1).
+//
+// Deliberately flatter than an earlier version of this curve (divisor
+// 1.25): that version made qualifying odds for anyone outside the top
+// ~10-12 rated sides essentially deterministic by rating rank alone, with a
+// single 10-point rating gap already implying a ~3000x weight difference.
+// Real qualifying campaigns are noisier than that -- unlucky groupings, a
+// poor run of form, or a golden generation aging out (Belgium, recent Italy
+// squads) can knock out a nominally "strong" side, while a well-drilled
+// team just outside the traditional elite (Norway-tier) can reliably grab a
+// borderline slot without needing to be a top-10 global power. Divisor 2.1
+// was Monte Carlo-checked (see qualifying odds sanity script used during
+// development, not shipped) against the UEFA pool specifically: true elite
+// sides (France/Spain/England-tier) still qualify essentially every time,
+// Italy/Belgium land around 97-99% (very likely, genuinely not automatic),
+// Norway lands around 80% (reliable, not guaranteed), and the tightly
+// bunched Austria/Serbia/Türkiye/Poland/Sweden/Ukraine band becomes a real
+// 40-80% toss-up for the remaining borderline slots.
 function qualifyingWeight(rating) {
-  return Math.exp(rating / 1.25)
+  return Math.exp(rating / 2.1)
 }
 
 // "Simulate qualifying" for one confederation: pick `quota` nations from the

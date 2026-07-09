@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
@@ -15,8 +16,14 @@ export default {
         charcoal: {
           900: '#1E2422',
           600: '#5B6660',
+          // Lighter secondary-text shade used only in dark mode (dark:text-charcoal-300)
+          300: '#B7C2BC',
         },
         sand: '#F4EFE6',
+        // Dark-mode surface colors -- forest-tinted near-black rather than
+        // pure black/gray, to stay on-brand with the rest of the palette.
+        night: '#0B100D',
+        'night-card': '#151F1A',
       },
       fontFamily: {
         display: ['"Poppins"', 'system-ui', 'sans-serif'],

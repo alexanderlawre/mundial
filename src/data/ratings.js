@@ -6,16 +6,27 @@
 export const CURRENT_RATINGS = {
   // Elite tier
   'Argentina': 90, 'France': 89, 'Brazil': 88, 'England': 86, 'Spain': 87,
-  'Portugal': 85, 'Netherlands': 85, 'Belgium': 82, 'Germany': 84, 'Italy': 82,
+  'Portugal': 85, 'Netherlands': 85, 'Germany': 84,
 
-  // Strong tier
+  // Strong tier -- note Italy and Belgium are deliberately kept out of the
+  // elite/auto-qualifier tier here: both have real recent pedigree
+  // (Belgium's "golden generation," Italy's 2020 Euros win) but have also
+  // each missed a recent World Cup on current form/squad transition
+  // (Italy missed 2018 & 2022; Belgium's core is aging past its peak), so
+  // they compete in the same realistic, non-guaranteed band as
+  // Croatia/Switzerland/Denmark rather than being auto-locks.
+  'Italy': 80, 'Belgium': 79,
   'Croatia': 81, 'Uruguay': 80, 'Colombia': 80, 'Morocco': 79, 'Switzerland': 78,
   'Japan': 78, 'United States': 77, 'Mexico': 76, 'Denmark': 78, 'Senegal': 78,
   'Austria': 77, 'Ecuador': 76, 'South Korea': 75, 'Ukraine': 75,
   'Serbia': 76, 'Poland': 75, 'Wales': 73, 'Iran': 74, 'Australia': 73,
   'Canada': 74, 'Türkiye': 76, 'Sweden': 75, 'Egypt': 74, 'Tunisia': 72,
   'Peru': 73, 'Chile': 73, 'Nigeria': 74, 'Algeria': 74, "Côte d'Ivoire": 75,
-  'Ghana': 72, 'Cameroon': 73, 'Scotland': 73, 'Norway': 74, 'Hungary': 71,
+  'Ghana': 72, 'Cameroon': 73, 'Scotland': 73, 'Norway': 77, 'Hungary': 71,
+  // Norway bumped from 74 -- the Haaland/Ødegaard generation is genuinely a
+  // top-20-ish global side right now, and previously sat in an overcrowded
+  // 71-76 cluster that made it qualify far less reliably than its real
+  // current strength would suggest.
 
   // Mid tier
   'Costa Rica': 70, 'Panama': 68, 'Jamaica': 66, 'Venezuela': 71, 'Paraguay': 70,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import CountryFlag from './CountryFlag'
 import SambaButton from './SambaButton'
+import { useTranslation } from '../lib/i18n'
 
 function move(arr, idx, dir) {
   const target = idx + dir
@@ -16,13 +17,14 @@ function move(arr, idx, dir) {
 // array of team names to start from (e.g. re-opening a previously confirmed
 // order). `onConfirm(orderedNames)` / `onCancel()`.
 export default function GroupRankEditor({ teams, initialOrder, onConfirm, onCancel }) {
-  const [order, setOrder] = useState(() => initialOrder || teams.map((t) => t.name))
-  const byName = Object.fromEntries(teams.map((t) => [t.name, t]))
+  const { t } = useTranslation()
+  const [order, setOrder] = useState(() => initialOrder || teams.map((team) => team.name))
+  const byName = Object.fromEntries(teams.map((team) => [team.name, team]))
 
   return (
-    <div className="rounded-xl border border-gold/40 bg-white p-3 space-y-2">
+    <div className="rounded-xl border border-gold/40 bg-white dark:bg-night-card p-3 space-y-2">
       <p className="text-[11px] uppercase tracking-wide text-charcoal-600/70 font-semibold">
-        Set Final Standings (1st to last)
+        {t('play.setFinalStandingsOrder')}
       </p>
       <div className="space-y-1.5">
         {order.map((name, i) => {
@@ -30,17 +32,17 @@ export default function GroupRankEditor({ teams, initialOrder, onConfirm, onCanc
           return (
             <div
               key={name}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-sand/60 border border-charcoal-900/10"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-sand/60 dark:bg-night/60 border border-charcoal-900/10 dark:border-white/10"
             >
-              <span className="text-xs text-charcoal-600 w-4 text-center font-semibold">{i + 1}</span>
+              <span className="text-xs text-charcoal-600 dark:text-charcoal-300 w-4 text-center font-semibold">{i + 1}</span>
               {team && <CountryFlag nation={team} size="sm" />}
               <span className="flex-1 text-sm font-medium truncate">{name}</span>
               <button
                 type="button"
                 disabled={i === 0}
                 onClick={() => setOrder((prev) => move(prev, i, -1))}
-                className="w-7 h-7 rounded-md border border-charcoal-900/15 text-charcoal-600 disabled:opacity-30 hover:bg-white"
-                aria-label={`Move ${name} up`}
+                className="w-7 h-7 rounded-md border border-charcoal-900/15 dark:border-white/15 text-charcoal-600 dark:text-charcoal-300 disabled:opacity-30 hover:bg-white dark:hover:bg-night-card"
+                aria-label={t('play.moveUp', { name })}
               >
                 &uarr;
               </button>
@@ -48,8 +50,8 @@ export default function GroupRankEditor({ teams, initialOrder, onConfirm, onCanc
                 type="button"
                 disabled={i === order.length - 1}
                 onClick={() => setOrder((prev) => move(prev, i, 1))}
-                className="w-7 h-7 rounded-md border border-charcoal-900/15 text-charcoal-600 disabled:opacity-30 hover:bg-white"
-                aria-label={`Move ${name} down`}
+                className="w-7 h-7 rounded-md border border-charcoal-900/15 dark:border-white/15 text-charcoal-600 dark:text-charcoal-300 disabled:opacity-30 hover:bg-white dark:hover:bg-night-card"
+                aria-label={t('play.moveDown', { name })}
               >
                 &darr;
               </button>
@@ -60,11 +62,11 @@ export default function GroupRankEditor({ teams, initialOrder, onConfirm, onCanc
       <div className="flex gap-2 pt-1">
         {onCancel && (
           <SambaButton size="sm" variant="outline" className="flex-1" onClick={onCancel}>
-            Cancel
+            {t('play.cancel')}
           </SambaButton>
         )}
         <SambaButton size="sm" variant="gold" className="flex-1" onClick={() => onConfirm(order)}>
-          Confirm Standings
+          {t('play.confirmStandings')}
         </SambaButton>
       </div>
     </div>

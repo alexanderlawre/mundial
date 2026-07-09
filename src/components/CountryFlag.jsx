@@ -13,7 +13,7 @@ export default function CountryFlag({ nation, size = 'md', className = '' }) {
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full bg-white shadow-depth border border-charcoal-900/10 overflow-hidden shrink-0 ${sizeClass} ${className}`}
+      className={`inline-flex items-center justify-center rounded-full bg-white dark:bg-night-card shadow-depth border border-charcoal-900/10 dark:border-white/10 overflow-hidden shrink-0 ${sizeClass} ${className}`}
       title={nation.name}
       aria-label={nation.name}
     >

@@ -1,25 +1,27 @@
 import { useState } from 'react'
 import CountryFlag from './CountryFlag'
+import { useTranslation, translateRoundLabel } from '../lib/i18n'
 
 // history: array of { label, matches: [{teamA, teamB, scoreA, scoreB, wentToPenalties, penA, penB, winner}] }
 export default function BracketView({ history, teamsByName, userNation }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(true)
   if (!history || history.length === 0) return null
 
   return (
-    <div className="rounded-2xl bg-white border border-charcoal-900/10 shadow-depth overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-night-card border border-charcoal-900/10 dark:border-white/10 shadow-depth overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-4 py-3 bg-forest text-white font-display font-semibold"
       >
-        <span>Tournament Bracket</span>
-        <span className="text-mint text-sm">{open ? 'Hide' : 'Show'}</span>
+        <span>{t('play.tournamentBracket')}</span>
+        <span className="text-mint text-sm">{open ? t('play.hide') : t('play.show')}</span>
       </button>
       {open && (
         <div className="p-4 space-y-4 max-h-96 overflow-y-auto">
           {history.map((round, ri) => (
             <div key={ri}>
-              <p className="text-xs uppercase tracking-wide text-charcoal-600 font-semibold mb-2">{round.label}</p>
+              <p className="text-xs uppercase tracking-wide text-charcoal-600 dark:text-charcoal-300 font-semibold mb-2">{translateRoundLabel(round.label, t)}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {round.matches.map((m, mi) => {
                   const teamA = teamsByName[m.teamA] || { name: m.teamA }

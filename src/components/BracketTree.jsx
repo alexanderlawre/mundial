@@ -2,6 +2,7 @@ import { useState } from 'react'
 import CountryFlag from './CountryFlag'
 import SambaButton from './SambaButton'
 import ScoreEditForm from './ScoreEditForm'
+import { useTranslation } from '../lib/i18n'
 
 // A single knockout match: two tappable rows (tap a team to predict the
 // winner before simulating) with scores shown at the bottom once played,
@@ -10,6 +11,7 @@ import ScoreEditForm from './ScoreEditForm'
 // user set/override the exact scoreline; knockout matches always require a
 // winner, so a level score forces a tiebreak pick via ScoreEditForm.
 function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMatch }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const teamA = teamsByName[match.teamA]
   const teamB = teamsByName[match.teamB]
@@ -18,7 +20,7 @@ function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMa
 
   if (editing) {
     return (
-      <div className={`rounded-xl border shadow-depth bg-white overflow-hidden p-3 ${played ? 'border-charcoal-900/10' : 'border-gold/40'}`}>
+      <div className={`rounded-xl border shadow-depth bg-white dark:bg-night-card overflow-hidden p-3 ${played ? 'border-charcoal-900/10 dark:border-white/10' : 'border-gold/40'}`}>
         {match.label && (
           <p className="text-[10px] uppercase tracking-wide text-charcoal-600/70 font-semibold pb-2">{match.label}</p>
         )}
@@ -39,7 +41,7 @@ function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMa
   }
 
   return (
-    <div className={`rounded-xl border shadow-depth bg-white overflow-hidden ${played ? 'border-charcoal-900/10' : 'border-gold/40'}`}>
+    <div className={`rounded-xl border shadow-depth bg-white dark:bg-night-card overflow-hidden ${played ? 'border-charcoal-900/10 dark:border-white/10' : 'border-gold/40'}`}>
       {match.label && (
         <p className="text-[10px] uppercase tracking-wide text-charcoal-600/70 font-semibold px-3 pt-2">{match.label}</p>
       )}
@@ -56,7 +58,7 @@ function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMa
               className={`w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left transition-colors
                 ${isWinner ? 'bg-mint/60 font-bold' : ''}
                 ${!played && isPredicted ? 'ring-2 ring-gold bg-gold/10' : ''}
-                ${!played ? 'hover:bg-sand cursor-pointer' : 'cursor-default'}`}
+                ${!played ? 'hover:bg-sand dark:hover:bg-night cursor-pointer' : 'cursor-default'}`}
             >
               <span className="flex items-center gap-2 min-w-0">
                 <CountryFlag nation={team} size="sm" />
@@ -79,14 +81,14 @@ function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMa
       {!played && (
         <div className="px-3 pb-2">
           <SambaButton size="sm" variant="outline" className="w-full" onClick={() => onSimulateMatch(match.id)}>
-            Simulate Match
+            {t('play.simulateMatchButton')}
           </SambaButton>
         </div>
       )}
       {editable && (
         <div className="px-3 pb-2">
           <SambaButton size="sm" variant="outline" className="w-full" onClick={() => setEditing(true)}>
-            {played ? 'Edit Result' : 'Set Result'}
+            {played ? t('play.editResult') : t('play.setResult')}
           </SambaButton>
         </div>
       )}
@@ -101,6 +103,7 @@ function BracketMatch({ match, teamsByName, onSimulateMatch, onPredict, onEditMa
 // Once only 2 matches remain (Final + 3rd Place) they render side by side
 // instead of split into sides.
 export default function BracketTree({ matches, teamsByName, onSimulateMatch, onPredict, onEditMatch }) {
+  const { t } = useTranslation()
   if (matches.length <= 2) {
     return (
       <div className="grid sm:grid-cols-2 gap-3">
@@ -118,13 +121,13 @@ export default function BracketTree({ matches, teamsByName, onSimulateMatch, onP
   return (
     <div className="grid sm:grid-cols-2 gap-6">
       <div className="space-y-3">
-        <p className="text-[11px] uppercase tracking-wide text-charcoal-600/60 font-semibold text-center">Side A</p>
+        <p className="text-[11px] uppercase tracking-wide text-charcoal-600/60 font-semibold text-center">{t('play.sideA')}</p>
         {left.map((m) => (
           <BracketMatch key={m.id} match={m} teamsByName={teamsByName} onSimulateMatch={onSimulateMatch} onPredict={onPredict} onEditMatch={onEditMatch} />
         ))}
       </div>
       <div className="space-y-3">
-        <p className="text-[11px] uppercase tracking-wide text-charcoal-600/60 font-semibold text-center">Side B</p>
+        <p className="text-[11px] uppercase tracking-wide text-charcoal-600/60 font-semibold text-center">{t('play.sideB')}</p>
         {right.map((m) => (
           <BracketMatch key={m.id} match={m} teamsByName={teamsByName} onSimulateMatch={onSimulateMatch} onPredict={onPredict} onEditMatch={onEditMatch} />
         ))}

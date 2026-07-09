@@ -5,22 +5,22 @@ export default function TeamBadge({ team, size = 'md', showRating = true, select
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2 rounded-2xl bg-white/90 border transition-all
-        ${selected ? 'border-gold ring-2 ring-gold shadow-depth-gold' : 'border-charcoal-900/10 shadow-depth'}
+      className={`flex items-center gap-3 px-3 py-2 rounded-2xl bg-white/90 dark:bg-night-card/90 border transition-all
+        ${selected ? 'border-gold ring-2 ring-gold shadow-depth-gold' : 'border-charcoal-900/10 dark:border-white/10 shadow-depth'}
         ${clickable ? 'cursor-pointer hover:-translate-y-0.5 active:scale-[0.98]' : ''}`}
     >
       <CountryFlag nation={team} size={size} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           {team.fifaCode && (
-            <span className="font-display text-[10px] font-bold tracking-widest text-charcoal-600 bg-charcoal-900/5 rounded px-1.5 py-0.5 shrink-0 tabular-nums">
+            <span className="font-display text-[10px] font-bold tracking-widest text-charcoal-600 dark:text-charcoal-300 bg-charcoal-900/5 rounded px-1.5 py-0.5 shrink-0 tabular-nums">
               {team.fifaCode}
             </span>
           )}
-          <p className="font-display font-semibold text-charcoal-900 truncate">{team.name}</p>
+          <p className="font-display font-semibold text-charcoal-900 dark:text-sand truncate">{team.name}</p>
         </div>
         {showRating && (
-          <p className="text-xs text-charcoal-600 tabular-nums">OVR {team.rating ?? '--'}</p>
+          <p className="text-xs text-charcoal-600 dark:text-charcoal-300 tabular-nums">OVR {team.rating ?? '--'}</p>
         )}
       </div>
       {right}

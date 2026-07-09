@@ -16,15 +16,28 @@ function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v))
 }
 
+// Rating-gap threshold (roughly "2+ tiers" on this app's 0-99 scale, where a
+// tier is ~8-10 points) above which a team is a clear underdog for the
+// purposes of late-knockout upset dampening below.
+const BIG_UNDERDOG_GAP = 12
+
 // Expected goals for `team` given the rating gap vs the opponent.
 // Chaos is intentionally modest: a small random wobble plus a low flat
 // chance of an upset-flavored swing, so ratings/form drive results while
-// still allowing occasional surprises.
-function expectedGoals(ratingFor, ratingAgainst, rng) {
+// still allowing occasional surprises. In quarterfinal-and-later rounds,
+// a clear underdog (2+ tiers below its opponent) has that upset-flavored
+// spike dampened -- both less likely to trigger and smaller when it does --
+// so deep Cinderella runs by weaker sides become rarer without being
+// impossible, matching real-world late-tournament form (favorites are
+// tested less by pure randomness the deeper a tournament goes).
+function expectedGoals(ratingFor, ratingAgainst, rng, { lateKnockout = false } = {}) {
   const gap = ratingFor - ratingAgainst
   let xg = 1.25 + gap * 0.038
   xg += (rng() - 0.5) * 0.35 // normal match-to-match variance
-  if (rng() < 0.03) xg += rng() * 0.5 // rare, smaller upset-flavored spike
+  const isBigUnderdog = lateKnockout && gap <= -BIG_UNDERDOG_GAP
+  const upsetChance = isBigUnderdog ? 0.012 : 0.03
+  const upsetMagnitude = isBigUnderdog ? 0.3 : 0.5
+  if (rng() < upsetChance) xg += rng() * upsetMagnitude // rare, upset-flavored spike
   return clamp(xg, 0.15, 4.2)
 }
 
@@ -85,10 +98,15 @@ function simulatePenaltyShootout(teamA, teamB, rng) {
 }
 
 // teamA/teamB shape: { name, rating, confederation, colors, iso2 }
-export function simulateMatch(teamA, teamB, { knockout = false, seedKey = '' } = {}) {
+// `roundSize`: number of teams entering the current knockout round (8 =
+// quarterfinals, 4 = semifinals, 2 = final). Optional -- omitted for group
+// matches and non-bracket play, where the upset dampening below doesn't
+// apply.
+export function simulateMatch(teamA, teamB, { knockout = false, seedKey = '', roundSize = null } = {}) {
   const rng = seededRng(`${teamA.name}-${teamB.name}-${seedKey}-${Math.random()}`)
-  const xgA = expectedGoals(teamA.rating, teamB.rating, rng)
-  const xgB = expectedGoals(teamB.rating, teamA.rating, rng)
+  const lateKnockout = knockout && roundSize != null && roundSize <= 8
+  const xgA = expectedGoals(teamA.rating, teamB.rating, rng, { lateKnockout })
+  const xgB = expectedGoals(teamB.rating, teamA.rating, rng, { lateKnockout })
   const scoreA = poissonRandom(xgA, rng)
   const scoreB = poissonRandom(xgB, rng)
 
