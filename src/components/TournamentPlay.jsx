@@ -8,14 +8,17 @@ import {
   buildGroupCrisscrossPairs,
   buildWC2026BracketPairs,
   nextRoundPairs,
-  roundLabelForTeamCount,
+  buildBracketSkeleton,
+  buildAdvancesToMap,
+  applyKnockoutResult,
+  initialMatchState,
   buildWinnerOnlyResult,
 } from '../lib/tournamentEngine'
 import { simulateMatch } from '../lib/matchEngine'
 import { logSimulationResult } from '../lib/storage'
 import MatchCard from './MatchCard'
 import GroupTable from './GroupTable'
-import KnockoutBracket from './KnockoutBracket'
+import BracketTree from './BracketTree'
 import ThirdPlacePicker from './ThirdPlacePicker'
 import GroupRankEditor from './GroupRankEditor'
 import TournamentSummary from './TournamentSummary'
@@ -103,23 +106,6 @@ function ManualGroupPanel({ letter, teams, teamsByName, advanceCount, manualOrde
   )
 }
 
-// Flattened per-match round shape: { label, matches: [{ id, teamA, teamB,
-// label, result, predicted }] }. `label` on an individual match (e.g.
-// "Final" / "3rd Place Playoff") overrides the round's own label for display.
-function makeRound(label, pairs, customLabels) {
-  return {
-    label,
-    matches: pairs.map((pair, idx) => ({
-      id: `${label}-${idx}`,
-      teamA: pair[0],
-      teamB: pair[1],
-      label: customLabels ? customLabels[idx] : null,
-      result: null,
-      predicted: null,
-    })),
-  }
-}
-
 export default function TournamentPlay({
   initialGroups,       // { A: [team,...], B: [...] } or null
   knockoutOnlyTeams,   // [team,...] used when initialGroups is null
@@ -177,19 +163,29 @@ export default function TournamentPlay({
 
   const [stage, setStage] = useState(initialGroups ? 'groups' : 'knockout')
   const [thirdPlaceSelected, setThirdPlaceSelected] = useState([])
-  const [rounds, setRounds] = useState(() => {
+
+  // Reactive bracket graph: `bracketSkeleton` is the fixed shape (rounds,
+  // match ids, feeder wiring) -- fully knowable up front since nextRoundPairs
+  // is purely positional -- and `matchState` is the only thing that actually
+  // changes as the tournament is played. Resolving any match propagates its
+  // winner straight into the next match's slot (see applyKnockoutResult);
+  // editing any match -- live or archived -- re-runs the same propagation
+  // and cascades invalidation forward through whatever it had fed.
+  const [bracketSkeleton, setBracketSkeleton] = useState(() => {
     if (initialGroups) return null
     const sorted = [...(knockoutOnlyTeams || [])].sort((a, b) => b.rating - a.rating)
     const qualified = sorted.map((t) => ({ team: t.name, groupLetter: null, tier: 0, rating: t.rating }))
     const slots = buildBracketSlots(qualified)
-    const pairs = nextRoundPairs(slots)
-    return [makeRound(roundLabelForTeamCount(slots.length), pairs)]
+    return buildBracketSkeleton(slots.length, format.has3rdPlace)
   })
-  const [bracketHistory, setBracketHistory] = useState([])
-  const [champion, setChampion] = useState(null)
-  const [runnerUpTeam, setRunnerUpTeam] = useState(null)
-  const [thirdPlaceTeam, setThirdPlaceTeam] = useState(null)
-  const [fourthPlaceTeam, setFourthPlaceTeam] = useState(null)
+  const [matchState, setMatchState] = useState(() => {
+    if (initialGroups) return null
+    const sorted = [...(knockoutOnlyTeams || [])].sort((a, b) => b.rating - a.rating)
+    const qualified = sorted.map((t) => ({ team: t.name, groupLetter: null, tier: 0, rating: t.rating }))
+    const pairs = nextRoundPairs(buildBracketSlots(qualified))
+    return initialMatchState(bracketSkeleton, pairs)
+  })
+  const advancesTo = useMemo(() => (bracketSkeleton ? buildAdvancesToMap(bracketSkeleton) : null), [bracketSkeleton])
 
   const allGroupMatchesDone = groupMatches
     ? Object.keys(groupMatches).every((letter) => (
@@ -307,177 +303,135 @@ export default function TournamentPlay({
       }
       pairs = buildGroupCrisscrossPairs(groupStandings, format, rankedThirds)
     }
-    const roundTeamCount = pairs.length * 2
-    setRounds([makeRound(roundLabelForTeamCount(roundTeamCount), pairs)])
+    const skeleton = buildBracketSkeleton(pairs.length * 2, format.has3rdPlace)
+    setBracketSkeleton(skeleton)
+    setMatchState(initialMatchState(skeleton, pairs))
     setStage('knockout')
   }
 
-  const currentRound = rounds ? rounds[rounds.length - 1] : null
-  const roundComplete = currentRound ? currentRound.matches.every((m) => m.result !== null) : false
+  // Champion/runner-up/3rd/4th are DERIVED from matchState rather than
+  // stored -- they read straight off the Final (and, if bundled, 3rd Place
+  // Playoff) match's slots, so they can never desync from the bracket and
+  // automatically "un-crown" if a cascade invalidation reopens the Final.
+  const finalRound = bracketSkeleton ? bracketSkeleton.rounds[bracketSkeleton.rounds.length - 1] : null
+  const finalMatchId = finalRound ? `m${finalRound.roundIdx}-${finalRound.customLabels ? 1 : 0}` : null
+  const thirdMatchId = finalRound?.customLabels ? `m${finalRound.roundIdx}-0` : null
+  const finalMatch = finalMatchId && matchState ? matchState[finalMatchId] : null
+  const thirdMatch = thirdMatchId && matchState ? matchState[thirdMatchId] : null
+  const champion = finalMatch?.result?.winner ?? null
+  const runnerUpTeam = finalMatch?.result
+    ? (finalMatch.result.winner === finalMatch.teamA ? finalMatch.teamB : finalMatch.teamA)
+    : null
+  const thirdPlaceTeam = thirdMatch?.result?.winner ?? null
+  const fourthPlaceTeam = thirdMatch?.result
+    ? (thirdMatch.result.winner === thirdMatch.teamA ? thirdMatch.teamB : thirdMatch.teamA)
+    : null
+
+  // Bracket-order list of every match id (feeders always precede whatever
+  // they feed, since round index only increases), used to find "the next
+  // playable match" and to drive a single-pass full-bracket simulation.
+  const orderedMatchIds = useMemo(() => (
+    bracketSkeleton
+      ? Object.values(bracketSkeleton.matches)
+          .sort((a, b) => a.roundIdx - b.roundIdx || a.slotIndex - b.slotIndex)
+          .map((m) => m.id)
+      : []
+  ), [bracketSkeleton])
+
+  const nextReadyMatchId = useMemo(() => {
+    if (!matchState) return null
+    return orderedMatchIds.find((id) => {
+      const m = matchState[id]
+      return m.teamA && m.teamB && !m.result
+    }) || null
+  }, [orderedMatchIds, matchState])
+
+  const activeRoundLabel = useMemo(() => {
+    if (!bracketSkeleton || !nextReadyMatchId) return null
+    const meta = bracketSkeleton.matches[nextReadyMatchId]
+    const round = bracketSkeleton.rounds.find((r) => r.roundIdx === meta.roundIdx)
+    return meta.label || round?.label
+  }, [bracketSkeleton, nextReadyMatchId])
 
   function simulateKnockoutMatchById(id) {
-    setRounds((prev) => {
-      const next = [...prev]
-      const round = { ...next[next.length - 1] }
-      round.matches = round.matches.map((m) => {
-        if (m.id !== id || m.result) return m
-        return {
-          ...m,
-          result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], {
-            knockout: true,
-            seedKey: id,
-            roundSize: round.matches.length * 2,
-          }),
-        }
+    setMatchState((prev) => {
+      const cur = prev[id]
+      if (!cur || cur.result || !cur.teamA || !cur.teamB) return prev
+      const roundIdx = bracketSkeleton.matches[id].roundIdx
+      const roundMatchCount = bracketSkeleton.rounds.find((r) => r.roundIdx === roundIdx).matchCount
+      const result = simulateMatch(teamsByName[cur.teamA], teamsByName[cur.teamB], {
+        knockout: true,
+        seedKey: id,
+        roundSize: roundMatchCount * 2,
       })
-      next[next.length - 1] = round
-      return next
+      return applyKnockoutResult(bracketSkeleton, advancesTo, prev, id, result)
     })
   }
 
   // Manual override -- lets the user directly pick (or flip) the winner of
-  // any match in the current knockout round with a single tap, instead of
-  // relying on the simulation. No scoreline is fabricated; the match is
-  // simply marked as won by the tapped team (see buildWinnerOnlyResult).
+  // ANY match, anywhere in the bracket, played or not, live round or an
+  // already-archived one -- instead of relying on simulation. No scoreline
+  // is fabricated (see buildWinnerOnlyResult). Changing an earlier match's
+  // winner automatically cascades: only the specific downstream slot(s) that
+  // depended on the old winner are cleared (their opponent slot, fed by an
+  // unrelated branch, is left alone), and those matches revert to unplayed.
   function editKnockoutMatchResult(id, winnerName) {
-    setRounds((prev) => {
-      const next = [...prev]
-      const round = { ...next[next.length - 1] }
-      round.matches = round.matches.map((m) => (
-        m.id !== id ? m : { ...m, result: buildWinnerOnlyResult(m.teamA, m.teamB, winnerName) }
-      ))
-      next[next.length - 1] = round
-      return next
+    setMatchState((prev) => {
+      const cur = prev[id]
+      if (!cur || !cur.teamA || !cur.teamB) return prev
+      const result = buildWinnerOnlyResult(cur.teamA, cur.teamB, winnerName)
+      return applyKnockoutResult(bracketSkeleton, advancesTo, prev, id, result)
     })
   }
 
   function setKnockoutPrediction(id, teamName) {
-    setRounds((prev) => {
-      const next = [...prev]
-      const round = { ...next[next.length - 1] }
-      round.matches = round.matches.map((m) => {
-        if (m.id !== id || m.result) return m
-        return { ...m, predicted: m.predicted === teamName ? null : teamName }
-      })
-      next[next.length - 1] = round
-      return next
+    setMatchState((prev) => {
+      const cur = prev[id]
+      if (!cur || cur.result) return prev
+      return { ...prev, [id]: { ...cur, predicted: cur.predicted === teamName ? null : teamName } }
     })
   }
 
   function simulateOneKnockoutMatch() {
-    setRounds((prev) => {
-      const next = [...prev]
-      const round = { ...next[next.length - 1] }
-      const idx = round.matches.findIndex((m) => m.result === null)
-      if (idx === -1) return prev
-      const m = round.matches[idx]
-      const matches = [...round.matches]
-      matches[idx] = {
-        ...m,
-        result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], {
-          knockout: true,
-          seedKey: m.id,
-          roundSize: round.matches.length * 2,
-        }),
-      }
-      round.matches = matches
-      next[next.length - 1] = round
-      return next
-    })
+    if (nextReadyMatchId) simulateKnockoutMatchById(nextReadyMatchId)
   }
 
   function simulateAllKnockoutMatches() {
-    setRounds((prev) => {
-      const next = [...prev]
-      const round = { ...next[next.length - 1] }
-      round.matches = round.matches.map((m) => (
-        m.result
-          ? m
-          : {
-              ...m,
-              result: simulateMatch(teamsByName[m.teamA], teamsByName[m.teamB], {
-                knockout: true,
-                seedKey: m.id,
-                roundSize: round.matches.length * 2,
-              }),
-            }
-      ))
-      next[next.length - 1] = round
+    setMatchState((prev) => {
+      let next = prev
+      for (const id of orderedMatchIds) {
+        const cur = next[id]
+        if (cur.result || !cur.teamA || !cur.teamB) continue
+        const roundIdx = bracketSkeleton.matches[id].roundIdx
+        const roundMatchCount = bracketSkeleton.rounds.find((r) => r.roundIdx === roundIdx).matchCount
+        const result = simulateMatch(teamsByName[cur.teamA], teamsByName[cur.teamB], {
+          knockout: true,
+          seedKey: id,
+          roundSize: roundMatchCount * 2,
+        })
+        next = applyKnockoutResult(bracketSkeleton, advancesTo, next, id, result)
+      }
       return next
     })
   }
 
-  function continueAfterRound() {
-    const round = currentRound
-    const resolvedMatches = round.matches.map((m) => ({ teamA: m.teamA, teamB: m.teamB, ...m.result }))
-    const hasCustomLabels = round.matches.some((m) => m.label)
-
-    // Archive this round (with per-match custom labels if present, e.g. Final + 3rd Place).
-    if (hasCustomLabels) {
-      round.matches.forEach((m, idx) => {
-        setBracketHistory((prev) => [...prev, { label: m.label, matches: [resolvedMatches[idx]] }])
-      })
-    } else {
-      setBracketHistory((prev) => [...prev, { label: round.label, matches: resolvedMatches }])
-    }
-
-    // Final round with a 3rd place match bundled in.
-    if (hasCustomLabels) {
-      const finalIdx = round.matches.findIndex((m) => m.label === 'Final')
-      const thirdIdx = round.matches.findIndex((m) => m.label === '3rd Place Playoff')
-      const finalMatch = round.matches[finalIdx]
-      const finalWinner = finalMatch.result.winner
-      setChampion(finalWinner)
-      setRunnerUpTeam(finalWinner === finalMatch.teamA ? finalMatch.teamB : finalMatch.teamA)
-      if (thirdIdx !== -1) {
-        const thirdMatch = round.matches[thirdIdx]
-        const thirdWinner = thirdMatch.result.winner
-        setThirdPlaceTeam(thirdWinner)
-        setFourthPlaceTeam(thirdWinner === thirdMatch.teamA ? thirdMatch.teamB : thirdMatch.teamA)
-      }
-      setStage('celebration')
-      return
-    }
-
-    const winners = round.matches.map((m) => m.result.winner || m.teamA)
-
-    if (winners.length === 1) {
-      const m = round.matches[0]
-      setChampion(winners[0])
-      setRunnerUpTeam(winners[0] === m.teamA ? m.teamB : m.teamA)
-      setStage('celebration')
-      return
-    }
-
-    if (round.matches.length === 2 && format.has3rdPlace) {
-      // Just completed the Semifinals (4 teams in). Build combined Final + 3rd place round.
-      const losers = round.matches.map((m) => (m.result.winner === m.teamA ? m.teamB : m.teamA))
-      const pairs = [[losers[0], losers[1]], [winners[0], winners[1]]]
-      setRounds((prev) => [...prev, makeRound('Final', pairs, ['3rd Place Playoff', 'Final'])])
-      setStage('knockout')
-      return
-    }
-
-    const pairs = nextRoundPairs(winners)
-    setRounds((prev) => [...prev, makeRound(roundLabelForTeamCount(winners.length), pairs)])
-    setStage('knockout')
-  }
-
-  // Once every match in the live knockout round has a result, automatically
-  // seed the winners into the next round -- no manual "Continue" click
-  // needed. A short delay lets the last score register visually first. The
-  // effect's own cleanup (clearing the pending timer) makes this safe under
-  // React StrictMode's mount/cleanup/mount double-invoke in development, and
-  // `roundComplete` naturally flips back to false as soon as the next round
-  // is pushed, so this can't double-fire.
+  // Flip the screen to the celebration recap once a champion is crowned
+  // (short delay purely so the Final's scoreline registers first -- this is
+  // the only remaining setTimeout in the whole flow; nothing about the
+  // bracket DATA itself is gated by it). If a later edit's cascade
+  // invalidation reaches the Final and un-crowns the champion, snap straight
+  // back to the live bracket -- instantly, since that's a correction, not a
+  // reveal.
   useEffect(() => {
-    if (stage !== 'knockout' || !roundComplete) return
-    const timer = setTimeout(() => {
-      continueAfterRound()
-    }, 650)
-    return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, roundComplete])
+    if (!bracketSkeleton) return
+    if (champion && stage === 'knockout') {
+      const timer = setTimeout(() => setStage('celebration'), 700)
+      return () => clearTimeout(timer)
+    }
+    if (!champion && stage === 'celebration') {
+      setStage('knockout')
+    }
+  }, [champion, stage, bracketSkeleton])
 
   // Log the outcome once, the first time this tournament reaches celebration.
   const loggedRef = useRef(false)
@@ -644,25 +598,25 @@ export default function TournamentPlay({
   if (stage === 'knockout') {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <Header title={title} hostLabel={hostLabel} subtitle={translateRoundLabel(currentRound.label, t)} />
+        <Header title={title} hostLabel={hostLabel} subtitle={activeRoundLabel ? translateRoundLabel(activeRoundLabel, t) : null} />
         <div className="flex gap-2 flex-wrap items-center">
-          <SambaButton onClick={simulateOneKnockoutMatch} disabled={roundComplete}>{t('play.simulateNext')}</SambaButton>
-          <SambaButton variant="secondary" onClick={simulateAllKnockoutMatches} disabled={roundComplete}>
-            {t('play.simulateRestRound')}
+          <SambaButton onClick={simulateOneKnockoutMatch} disabled={!nextReadyMatchId}>{t('play.simulateNext')}</SambaButton>
+          <SambaButton variant="secondary" onClick={simulateAllKnockoutMatches} disabled={!nextReadyMatchId}>
+            {t('play.simulateRestBracket')}
           </SambaButton>
-          {roundComplete && (
-            <span className="text-sm italic text-charcoal-600 dark:text-charcoal-300">{t('play.advancing')}</span>
+          {!nextReadyMatchId && !champion && (
+            <span className="text-sm italic text-charcoal-600 dark:text-charcoal-300">{t('play.crowningChampion')}</span>
           )}
         </div>
-        <KnockoutBracket
-          bracketHistory={bracketHistory}
-          currentRound={currentRound}
-          entryCount={rounds[0].matches.length * 2}
-          has3rdPlace={format.has3rdPlace}
+        <BracketTree
+          skeleton={bracketSkeleton}
+          matchState={matchState}
           teamsByName={teamsByName}
+          interactive={interactivity === 'full'}
+          allowPredict={interactivity === 'simulateOnly'}
           onSimulateMatch={simulateKnockoutMatchById}
-          onPredict={setKnockoutPrediction}
           onEditMatch={interactivity === 'full' ? editKnockoutMatchResult : undefined}
+          onPredict={setKnockoutPrediction}
           userNation={userNation}
         />
       </div>
@@ -691,12 +645,15 @@ export default function TournamentPlay({
             teamsByName={teamsByName}
           />
         </div>
-        <KnockoutBracket
-          bracketHistory={bracketHistory}
-          currentRound={null}
-          entryCount={rounds[0].matches.length * 2}
-          has3rdPlace={format.has3rdPlace}
+        <BracketTree
+          skeleton={bracketSkeleton}
+          matchState={matchState}
           teamsByName={teamsByName}
+          interactive={interactivity === 'full'}
+          allowPredict={interactivity === 'simulateOnly'}
+          onSimulateMatch={simulateKnockoutMatchById}
+          onEditMatch={interactivity === 'full' ? editKnockoutMatchResult : undefined}
+          onPredict={setKnockoutPrediction}
           userNation={userNation}
         />
         <div className="mt-8">

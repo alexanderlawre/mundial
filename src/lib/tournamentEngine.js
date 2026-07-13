@@ -570,6 +570,162 @@ export function roundLabelForTeamCount(count) {
   return ROUND_LABELS[count] || `Round of ${count}`
 }
 
+// ---------- Reactive bracket graph (skeleton + match-state propagation) ----------
+
+// Precomputes the fixed *shape* of the knockout bracket -- every round's
+// label and match count, plus (for every match beyond round 0) which two
+// earlier matches feed its two slots and whether each feeder relationship
+// is that match's winner or loser. This shape is fully knowable up front
+// (nextRoundPairs is purely positional, no re-seeding), which is what lets
+// the whole bracket be built once at knockout start instead of round by
+// round. Handles every existing shape by construction: entryCount 2 (Final
+// only, round 0, no feeders), entryCount 4 with/without a 3rd place match,
+// and the bundled Final+3rd-place round (fed by BOTH outcomes of the same
+// two Semifinal matches -- winners feed the Final, losers feed 3rd place).
+export function buildBracketSkeleton(entryCount, has3rdPlace) {
+  const rounds = []
+  let n = entryCount
+  let idx = 0
+  while (n > 4) {
+    rounds.push({ roundIdx: idx, label: roundLabelForTeamCount(n), matchCount: n / 2 })
+    n = n / 2
+    idx++
+  }
+  if (n === 4) {
+    rounds.push({ roundIdx: idx, label: 'Semifinals', matchCount: 2 })
+    idx++
+    rounds.push({
+      roundIdx: idx,
+      label: 'Final',
+      matchCount: has3rdPlace ? 2 : 1,
+      customLabels: has3rdPlace ? ['3rd Place Playoff', 'Final'] : null,
+    })
+  } else if (n === 2) {
+    rounds.push({ roundIdx: idx, label: 'Final', matchCount: 1 })
+  }
+
+  const matches = {}
+  rounds.forEach((round) => {
+    for (let slot = 0; slot < round.matchCount; slot++) {
+      const id = `m${round.roundIdx}-${slot}`
+      matches[id] = {
+        id,
+        roundIdx: round.roundIdx,
+        slotIndex: slot,
+        label: round.customLabels ? round.customLabels[slot] : null,
+        feederA: null,
+        feederB: null,
+      }
+    }
+  })
+
+  for (let ri = 1; ri < rounds.length; ri++) {
+    const round = rounds[ri]
+    if (round.customLabels) {
+      // Bundled Final round: both matches are fed by the SAME two
+      // Semifinal matches -- winners advance to the Final (slot 1), losers
+      // drop to the 3rd Place Playoff (slot 0).
+      const sf0 = `m${ri - 1}-0`
+      const sf1 = `m${ri - 1}-1`
+      matches[`m${ri}-0`].feederA = { matchId: sf0, outcome: 'loser' }
+      matches[`m${ri}-0`].feederB = { matchId: sf1, outcome: 'loser' }
+      matches[`m${ri}-1`].feederA = { matchId: sf0, outcome: 'winner' }
+      matches[`m${ri}-1`].feederB = { matchId: sf1, outcome: 'winner' }
+    } else {
+      for (let slot = 0; slot < round.matchCount; slot++) {
+        matches[`m${ri}-${slot}`].feederA = { matchId: `m${ri - 1}-${slot * 2}`, outcome: 'winner' }
+        matches[`m${ri}-${slot}`].feederB = { matchId: `m${ri - 1}-${slot * 2 + 1}`, outcome: 'winner' }
+      }
+    }
+  }
+
+  return { entryCount, has3rdPlace, rounds, matches }
+}
+
+// Seeds round-0 match state with the real team names produced by whichever
+// first-round pairing function ran (buildBracketSlots + nextRoundPairs,
+// buildGroupCrisscrossPairs, or buildWC2026BracketPairs); every later round
+// starts with both slots empty, waiting for propagation.
+export function initialMatchState(skeleton, firstRoundPairs) {
+  const state = {}
+  Object.values(skeleton.matches).forEach((m) => {
+    if (m.roundIdx === 0) {
+      const [teamA, teamB] = firstRoundPairs[m.slotIndex]
+      state[m.id] = { teamA, teamB, result: null, predicted: null }
+    } else {
+      state[m.id] = { teamA: null, teamB: null, result: null, predicted: null }
+    }
+  })
+  return state
+}
+
+// One-time reverse index: matchId -> [{ matchId, slot, outcome }, ...]
+// describing every downstream match/slot this match feeds. Built from the
+// skeleton's (backward-pointing) feederA/feederB, so applyKnockoutResult
+// can walk forward efficiently.
+export function buildAdvancesToMap(skeleton) {
+  const map = {}
+  Object.values(skeleton.matches).forEach((m) => {
+    ;[['feederA', 'A'], ['feederB', 'B']].forEach(([key, slot]) => {
+      const f = m[key]
+      if (!f) return
+      if (!map[f.matchId]) map[f.matchId] = []
+      map[f.matchId].push({ matchId: m.id, slot, outcome: f.outcome })
+    })
+  })
+  return map
+}
+
+// The single function driving both immediate propagation AND cascading
+// invalidation. Sets matchId's result (a simulateMatch()/buildWinnerOnlyResult()
+// shape), then walks advancesTo[matchId], writing the correct team name
+// (winner or loser, per each feeder relationship's `outcome`) into every
+// downstream slot this match feeds. A downstream match's OTHER slot -- fed
+// by an unrelated branch of the bracket -- is never touched, which is what
+// "keep valid teams seeded" means in practice. If a downstream slot's value
+// actually changes and that match already had a result, that result is now
+// stale: it's cleared (along with any cosmetic prediction) and the walk
+// recurses from that match using ITS pre-clear team names, so the
+// invalidation cascades exactly as far as it needs to -- including, for the
+// bundled Final round, correctly updating both the Final and the 3rd Place
+// Playoff slots from a single Semifinal result change, since a Semifinal's
+// advancesTo entry has two independent targets processed in the same pass.
+// Pure function -- safe to call twice with identical inputs (React 18
+// StrictMode's dev-mode double-invoke of setState updaters), since it has
+// no side effects of its own.
+export function applyKnockoutResult(skeleton, advancesTo, matchState, matchId, result) {
+  const next = { ...matchState }
+
+  function propagate(id, oldTeamA, oldTeamB, newResult) {
+    const targets = advancesTo[id]
+    if (!targets) return
+    targets.forEach(({ matchId: targetId, slot, outcome }) => {
+      const newTeam = newResult
+        ? (outcome === 'winner' ? newResult.winner : (newResult.winner === oldTeamA ? oldTeamB : oldTeamA))
+        : null
+      const target = next[targetId]
+      const key = slot === 'A' ? 'teamA' : 'teamB'
+      if (target[key] === newTeam) return // already correct, nothing to cascade
+
+      const staleResult = target.result
+      const staleA = target.teamA
+      const staleB = target.teamB
+      next[targetId] = {
+        ...target,
+        [key]: newTeam,
+        result: staleResult ? null : target.result,
+        predicted: staleResult ? null : target.predicted,
+      }
+      if (staleResult) propagate(targetId, staleA, staleB, null)
+    })
+  }
+
+  const cur = matchState[matchId]
+  next[matchId] = { ...next[matchId], result, predicted: null }
+  propagate(matchId, cur.teamA, cur.teamB, result)
+  return next
+}
+
 // ---------- Intercontinental playoff (48-team format's last 2 slots) ----------
 
 // legTeams: [teamA, teamB, teamC] team objects matching a PLAYOFF_PATHS_48

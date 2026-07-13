@@ -59,7 +59,7 @@ const en = {
     continueThirdPlace: 'Continue to Third-Place Selection',
     continueKnockouts: 'Continue to Knockouts',
     confirmStartKnockouts: 'Confirm & Start Knockouts',
-    simulateRestRound: 'Simulate Rest of Round',
+    simulateRestBracket: 'Simulate Rest of Bracket',
     continue: 'Continue',
     simulateMatch: 'Simulate {label}',
     champions: 'Champions',
@@ -75,6 +75,7 @@ const en = {
     tbd: 'TBD',
     tapToSetWinner: 'Tap a team to set the winner',
     advancing: 'Advancing to next round\u2026',
+    crowningChampion: 'Crowning champion\u2026',
     advances: 'Advances',
     hide: 'Hide',
     show: 'Show',
@@ -159,7 +160,7 @@ const es = {
     continueThirdPlace: 'Continuar a Selección de Terceros',
     continueKnockouts: 'Continuar a Eliminatorias',
     confirmStartKnockouts: 'Confirmar e Iniciar Eliminatorias',
-    simulateRestRound: 'Simular Resto de la Ronda',
+    simulateRestBracket: 'Simular Resto del Cuadro',
     continue: 'Continuar',
     simulateMatch: 'Simular {label}',
     champions: 'Campeones',
@@ -175,6 +176,7 @@ const es = {
     tbd: 'Por definir',
     tapToSetWinner: 'Toca un equipo para definir al ganador',
     advancing: 'Avanzando a la siguiente ronda\u2026',
+    crowningChampion: 'Coronando al campe\u00f3n\u2026',
     advances: 'Avanza',
     hide: 'Ocultar',
     show: 'Mostrar',
@@ -259,7 +261,7 @@ const pt = {
     continueThirdPlace: 'Continuar para Seleção de Terceiros',
     continueKnockouts: 'Continuar para o Mata-Mata',
     confirmStartKnockouts: 'Confirmar e Iniciar Mata-Mata',
-    simulateRestRound: 'Simular Resto da Rodada',
+    simulateRestBracket: 'Simular Resto do Chaveamento',
     continue: 'Continuar',
     simulateMatch: 'Simular {label}',
     champions: 'Campeões',
@@ -275,6 +277,7 @@ const pt = {
     tbd: 'A definir',
     tapToSetWinner: 'Toque em uma equipe para definir o vencedor',
     advancing: 'Avan\u00e7ando para a pr\u00f3xima rodada\u2026',
+    crowningChampion: 'Coroando o campe\u00e3o\u2026',
     advances: 'Avan\u00e7a',
     hide: 'Ocultar',
     show: 'Mostrar',
@@ -359,7 +362,7 @@ const fr = {
     continueThirdPlace: 'Continuer vers la Sélection des Troisièmes',
     continueKnockouts: 'Continuer vers les Éliminatoires',
     confirmStartKnockouts: 'Confirmer et Démarrer les Éliminatoires',
-    simulateRestRound: 'Simuler le Reste du Tour',
+    simulateRestBracket: 'Simuler le Reste du Tableau',
     continue: 'Continuer',
     simulateMatch: 'Simuler {label}',
     champions: 'Champions',
@@ -375,6 +378,7 @@ const fr = {
     tbd: 'À déterminer',
     tapToSetWinner: 'Touchez une équipe pour définir le vainqueur',
     advancing: 'Passage au tour suivant\u2026',
+    crowningChampion: 'Couronnement du champion\u2026',
     advances: 'Se qualifie',
     hide: 'Masquer',
     show: 'Afficher',
@@ -448,6 +452,7 @@ export function setStoredLanguage(lang) {
 // in state and used for equality checks elsewhere, so simulation/bracket
 // logic is never affected by the active language.
 export function translateRoundLabel(label, t) {
+  if (label == null) return label
   const known = getNested(DICTS.en.rounds, label) // just checks membership by key existing
   if (known == null) return label
   return t(`rounds.${label}`, null, label)

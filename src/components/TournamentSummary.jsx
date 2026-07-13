@@ -21,7 +21,7 @@ function PodiumRow({ rank, label, name, teamsByName, highlight }) {
 // End-of-tournament podium, in order: winner, runner-up, 3rd, 4th. (Each
 // team's full path through the tournament -- including where everyone else
 // was eliminated -- is shown right below this via the full-bracket
-// KnockoutBracket recap, so it isn't duplicated here as a flat list.)
+// BracketTree recap, so it isn't duplicated here as a flat list.)
 export default function TournamentSummary({
   champion,
   runnerUp,
