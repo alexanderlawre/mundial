@@ -475,6 +475,22 @@ export default function TournamentPlay({
     setStage('knockout')
   }
 
+  // Once every match in the live knockout round has a result, automatically
+  // seed the winners into the next round -- no manual "Continue" click
+  // needed. A short delay lets the last score register visually first. The
+  // effect's own cleanup (clearing the pending timer) makes this safe under
+  // React StrictMode's mount/cleanup/mount double-invoke in development, and
+  // `roundComplete` naturally flips back to false as soon as the next round
+  // is pushed, so this can't double-fire.
+  useEffect(() => {
+    if (stage !== 'knockout' || !roundComplete) return
+    const timer = setTimeout(() => {
+      continueAfterRound()
+    }, 650)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, roundComplete])
+
   // Log the outcome once, the first time this tournament reaches celebration.
   const loggedRef = useRef(false)
   useEffect(() => {
@@ -643,13 +659,13 @@ export default function TournamentPlay({
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <Header title={title} hostLabel={hostLabel} subtitle={translateRoundLabel(currentRound.label, t)} />
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <SambaButton onClick={simulateOneKnockoutMatch} disabled={roundComplete}>{t('play.simulateNext')}</SambaButton>
           <SambaButton variant="secondary" onClick={simulateAllKnockoutMatches} disabled={roundComplete}>
             {t('play.simulateRestRound')}
           </SambaButton>
           {roundComplete && (
-            <SambaButton variant="gold" onClick={continueAfterRound}>{t('play.continue')}</SambaButton>
+            <span className="text-sm italic text-charcoal-600 dark:text-charcoal-300">{t('play.advancing')}</span>
           )}
         </div>
         <KnockoutBracket

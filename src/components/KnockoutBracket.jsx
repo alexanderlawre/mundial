@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import CountryFlag from './CountryFlag'
 import SambaButton from './SambaButton'
-import ScoreEditForm from './ScoreEditForm'
 import { roundLabelForTeamCount } from '../lib/tournamentEngine'
 import { useTranslation, translateRoundLabel } from '../lib/i18n'
 
@@ -34,38 +33,27 @@ function buildRoundSkeleton(entryCount, has3rdPlace) {
 
 const CARD_BASE = 'rounded-xl border shadow-depth bg-white dark:bg-night-card overflow-hidden'
 
-// Interactive card for the live round -- tap a team to predict, "Simulate"
-// button, "Edit/Set Result" toggle. Same behavior/callback signatures as the
-// bracket previously used, just with bigger circular flags for the more
-// "poster"-style look.
+// Interactive card for the live round. When manual overrides are allowed
+// (`onEditMatch` supplied), tapping a team directly sets -- or, for an
+// already-played match, overrides -- that team as the winner via a clean
+// 1-0 scoreline; no separate score-entry form needed. A "Simulate Match"
+// button is still offered for a randomized result. When manual overrides
+// aren't allowed (Historic Cups' simulateOnly mode), tapping a team is just
+// a cosmetic "predict" highlight, unchanged from before. Bigger circular
+// flags for the "poster"-style look.
 function LiveMatchCard({ match, teamsByName, onSimulateMatch, onPredict, onEditMatch }) {
   const { t } = useTranslation()
-  const [editing, setEditing] = useState(false)
   const teamA = teamsByName[match.teamA]
   const teamB = teamsByName[match.teamB]
   const played = !!match.result
   const editable = typeof onEditMatch === 'function'
 
-  if (editing) {
-    return (
-      <div className={`${CARD_BASE} p-3 ${played ? 'border-charcoal-900/10 dark:border-white/10' : 'border-gold/40'}`}>
-        {match.label && (
-          <p className="text-[10px] uppercase tracking-wide text-charcoal-600/70 dark:text-charcoal-300/70 font-semibold pb-2">{translateRoundLabel(match.label, t)}</p>
-        )}
-        <ScoreEditForm
-          teamA={teamA}
-          teamB={teamB}
-          initialScoreA={match.result?.scoreA ?? 0}
-          initialScoreB={match.result?.scoreB ?? 0}
-          requireWinner
-          onSave={(scoreA, scoreB, tiebreakWinner) => {
-            onEditMatch(match.id, scoreA, scoreB, tiebreakWinner)
-            setEditing(false)
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      </div>
-    )
+  function handleTeamClick(isTeamA) {
+    if (editable) {
+      onEditMatch(match.id, isTeamA ? 1 : 0, isTeamA ? 0 : 1)
+      return
+    }
+    if (!played) onPredict(match.id, isTeamA ? match.teamA : match.teamB)
   }
 
   return (
@@ -76,17 +64,18 @@ function LiveMatchCard({ match, teamsByName, onSimulateMatch, onPredict, onEditM
       <div className="px-2.5 py-2 space-y-1">
         {[teamA, teamB].map((team, i) => {
           const isWinner = played && match.result.winner === team.name
-          const isPredicted = match.predicted === team.name
+          const isPredicted = !editable && match.predicted === team.name
+          const clickable = editable || !played
           return (
             <button
               key={team.name}
               type="button"
-              disabled={played}
-              onClick={() => onPredict(match.id, team.name)}
+              disabled={!clickable}
+              onClick={() => handleTeamClick(i === 0)}
               className={`w-full flex items-center justify-between gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors
                 ${isWinner ? 'bg-mint/60 font-bold' : ''}
                 ${!played && isPredicted ? 'ring-2 ring-gold bg-gold/10' : ''}
-                ${!played ? 'hover:bg-sand dark:hover:bg-night cursor-pointer' : 'cursor-default'}`}
+                ${clickable ? 'hover:bg-sand dark:hover:bg-night cursor-pointer' : 'cursor-default'}`}
             >
               <span className="flex items-center gap-2 min-w-0">
                 <CountryFlag nation={team} size="md" />
@@ -106,17 +95,13 @@ function LiveMatchCard({ match, teamsByName, onSimulateMatch, onPredict, onEditM
           )
         })}
       </div>
+      {editable && !played && (
+        <p className="px-2.5 pb-1.5 text-[11px] text-charcoal-600/70 dark:text-charcoal-300/70">{t('play.tapToSetWinner')}</p>
+      )}
       {!played && (
         <div className="px-2.5 pb-2">
           <SambaButton size="sm" variant="outline" className="w-full" onClick={() => onSimulateMatch(match.id)}>
             {t('play.simulateMatchButton')}
-          </SambaButton>
-        </div>
-      )}
-      {editable && (
-        <div className="px-2.5 pb-2">
-          <SambaButton size="sm" variant="outline" className="w-full" onClick={() => setEditing(true)}>
-            {played ? t('play.editResult') : t('play.setResult')}
           </SambaButton>
         </div>
       )}
