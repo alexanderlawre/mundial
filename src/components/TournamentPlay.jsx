@@ -15,8 +15,7 @@ import { simulateMatch } from '../lib/matchEngine'
 import { logSimulationResult } from '../lib/storage'
 import MatchCard from './MatchCard'
 import GroupTable from './GroupTable'
-import BracketView from './BracketView'
-import BracketTree from './BracketTree'
+import KnockoutBracket from './KnockoutBracket'
 import ThirdPlacePicker from './ThirdPlacePicker'
 import GroupRankEditor from './GroupRankEditor'
 import TournamentSummary from './TournamentSummary'
@@ -641,7 +640,6 @@ export default function TournamentPlay({
   }
 
   if (stage === 'knockout') {
-    const isFinalRound = currentRound.matches.some((m) => m.label)
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <Header title={title} hostLabel={hostLabel} subtitle={translateRoundLabel(currentRound.label, t)} />
@@ -654,36 +652,17 @@ export default function TournamentPlay({
             <SambaButton variant="gold" onClick={continueAfterRound}>{t('play.continue')}</SambaButton>
           )}
         </div>
-        {isFinalRound ? (
-          <div className="grid sm:grid-cols-2 gap-4">
-            {currentRound.matches.map((m) => (
-              <div key={m.id} className="space-y-2">
-                <MatchCard
-                  variant={m.label === 'Final' ? 'final' : 'bronze'}
-                  match={m.result}
-                  teamA={teamsByName[m.teamA]}
-                  teamB={teamsByName[m.teamB]}
-                  requireWinner
-                  onEdit={interactivity === 'full' ? (scoreA, scoreB, tiebreakWinner) => editKnockoutMatchResult(m.id, scoreA, scoreB, tiebreakWinner) : undefined}
-                />
-                {!m.result && (
-                  <SambaButton size="sm" variant="outline" className="w-full" onClick={() => simulateKnockoutMatchById(m.id)}>
-                    {t('play.simulateMatch', { label: translateRoundLabel(m.label, t) })}
-                  </SambaButton>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <BracketTree
-            matches={currentRound.matches}
-            teamsByName={teamsByName}
-            onSimulateMatch={simulateKnockoutMatchById}
-            onPredict={setKnockoutPrediction}
-            onEditMatch={interactivity === 'full' ? editKnockoutMatchResult : undefined}
-          />
-        )}
-        <BracketView history={bracketHistory} teamsByName={teamsByName} userNation={userNation} />
+        <KnockoutBracket
+          bracketHistory={bracketHistory}
+          currentRound={currentRound}
+          entryCount={rounds[0].matches.length * 2}
+          has3rdPlace={format.has3rdPlace}
+          teamsByName={teamsByName}
+          onSimulateMatch={simulateKnockoutMatchById}
+          onPredict={setKnockoutPrediction}
+          onEditMatch={interactivity === 'full' ? editKnockoutMatchResult : undefined}
+          userNation={userNation}
+        />
       </div>
     )
   }
@@ -718,7 +697,14 @@ export default function TournamentPlay({
             teamsByName={teamsByName}
           />
         </div>
-        <BracketView history={bracketHistory} teamsByName={teamsByName} userNation={userNation} />
+        <KnockoutBracket
+          bracketHistory={bracketHistory}
+          currentRound={null}
+          entryCount={rounds[0].matches.length * 2}
+          has3rdPlace={format.has3rdPlace}
+          teamsByName={teamsByName}
+          userNation={userNation}
+        />
         <div className="mt-8">
           <SambaButton variant="gold" size="lg" onClick={onRestart}>{t('play.simulateAgain')}</SambaButton>
         </div>
