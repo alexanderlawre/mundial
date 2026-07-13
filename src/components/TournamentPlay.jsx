@@ -9,7 +9,7 @@ import {
   buildWC2026BracketPairs,
   nextRoundPairs,
   roundLabelForTeamCount,
-  buildManualResult,
+  buildWinnerOnlyResult,
 } from '../lib/tournamentEngine'
 import { simulateMatch } from '../lib/matchEngine'
 import { logSimulationResult } from '../lib/storage'
@@ -238,19 +238,6 @@ export default function TournamentPlay({
     })
   }
 
-  // Manual override -- lets the user set/replace the exact scoreline for any
-  // group match (played or not) instead of relying on the simulation.
-  function editGroupMatchResult(letter, idx, scoreA, scoreB) {
-    setGroupMatches((prev) => {
-      const next = { ...prev }
-      const arr = [...next[letter]]
-      const [nameA, nameB] = fixtures[letter].pairs[idx]
-      arr[idx] = buildManualResult(nameA, nameB, scoreA, scoreB)
-      next[letter] = arr
-      return next
-    })
-  }
-
   function chooseGroupMode(letter, nextMode) {
     setGroupMode((prev) => ({ ...prev, [letter]: nextMode }))
   }
@@ -348,15 +335,16 @@ export default function TournamentPlay({
     })
   }
 
-  // Manual override -- lets the user set/replace the exact scoreline (and,
-  // for a level score, the tiebreak winner) for any match in the current
-  // knockout round, instead of relying on the simulation.
-  function editKnockoutMatchResult(id, scoreA, scoreB, tiebreakWinner) {
+  // Manual override -- lets the user directly pick (or flip) the winner of
+  // any match in the current knockout round with a single tap, instead of
+  // relying on the simulation. No scoreline is fabricated; the match is
+  // simply marked as won by the tapped team (see buildWinnerOnlyResult).
+  function editKnockoutMatchResult(id, winnerName) {
     setRounds((prev) => {
       const next = [...prev]
       const round = { ...next[next.length - 1] }
       round.matches = round.matches.map((m) => (
-        m.id !== id ? m : { ...m, result: buildManualResult(m.teamA, m.teamB, scoreA, scoreB, tiebreakWinner) }
+        m.id !== id ? m : { ...m, result: buildWinnerOnlyResult(m.teamA, m.teamB, winnerName) }
       ))
       next[next.length - 1] = round
       return next
@@ -571,7 +559,6 @@ export default function TournamentPlay({
                         label={`Matchday ${fixtures[letter].matchday[nextIdx] + 1}`}
                         teamA={teamsByName[fixtures[letter].pairs[nextIdx][0]]}
                         teamB={teamsByName[fixtures[letter].pairs[nextIdx][1]]}
-                        onEdit={interactivity === 'full' ? (scoreA, scoreB) => editGroupMatchResult(letter, nextIdx, scoreA, scoreB) : undefined}
                       />
                     )}
                     {playedIdxs.length > 0 && (
@@ -585,7 +572,6 @@ export default function TournamentPlay({
                             match={matches[idx]}
                             teamA={teamsByName[fixtures[letter].pairs[idx][0]]}
                             teamB={teamsByName[fixtures[letter].pairs[idx][1]]}
-                            onEdit={interactivity === 'full' ? (scoreA, scoreB) => editGroupMatchResult(letter, idx, scoreA, scoreB) : undefined}
                           />
                         ))}
                       </div>
@@ -685,12 +671,6 @@ export default function TournamentPlay({
 
   if (stage === 'celebration') {
     const championTeam = teamsByName[champion]
-    const quarterfinalLosers = bracketHistory
-      .filter((r) => r.label === 'Quarterfinals')
-      .flatMap((r) => r.matches.map((m) => (m.winner === m.teamA ? m.teamB : m.teamA)))
-    const roundOf16Losers = bracketHistory
-      .filter((r) => r.label === 'Round of 16')
-      .flatMap((r) => r.matches.map((m) => (m.winner === m.teamA ? m.teamB : m.teamA)))
     return (
       <div className="max-w-3xl mx-auto px-4 py-8 text-center">
         <div className="text-left mb-8">
@@ -708,8 +688,6 @@ export default function TournamentPlay({
             runnerUp={runnerUpTeam}
             thirdPlace={thirdPlaceTeam}
             fourthPlace={fourthPlaceTeam}
-            quarterfinalLosers={quarterfinalLosers}
-            roundOf16Losers={roundOf16Losers}
             teamsByName={teamsByName}
           />
         </div>

@@ -35,22 +35,23 @@ const CARD_BASE = 'rounded-xl border shadow-depth bg-white dark:bg-night-card ov
 
 // Interactive card for the live round. When manual overrides are allowed
 // (`onEditMatch` supplied), tapping a team directly sets -- or, for an
-// already-played match, overrides -- that team as the winner via a clean
-// 1-0 scoreline; no separate score-entry form needed. A "Simulate Match"
-// button is still offered for a randomized result. When manual overrides
-// aren't allowed (Historic Cups' simulateOnly mode), tapping a team is just
-// a cosmetic "predict" highlight, unchanged from before. Bigger circular
-// flags for the "poster"-style look.
+// already-played match, overrides -- that team as the winner. No scoreline
+// is fabricated -- a manual pick just records who advances, not a goal
+// count -- so a "Simulate Match" button is still offered when a real
+// scoreline is wanted. When manual overrides aren't allowed (Historic Cups'
+// simulateOnly mode), tapping a team is just a cosmetic "predict" highlight,
+// unchanged from before. Bigger circular flags for the "poster"-style look.
 function LiveMatchCard({ match, teamsByName, onSimulateMatch, onPredict, onEditMatch }) {
   const { t } = useTranslation()
   const teamA = teamsByName[match.teamA]
   const teamB = teamsByName[match.teamB]
   const played = !!match.result
   const editable = typeof onEditMatch === 'function'
+  const hasScore = played && match.result.scoreA != null
 
   function handleTeamClick(isTeamA) {
     if (editable) {
-      onEditMatch(match.id, isTeamA ? 1 : 0, isTeamA ? 0 : 1)
+      onEditMatch(match.id, isTeamA ? match.teamA : match.teamB)
       return
     }
     if (!played) onPredict(match.id, isTeamA ? match.teamA : match.teamB)
@@ -81,7 +82,7 @@ function LiveMatchCard({ match, teamsByName, onSimulateMatch, onPredict, onEditM
                 <CountryFlag nation={team} size="md" />
                 <span className="truncate text-sm text-charcoal-900 dark:text-sand">{team.name}</span>
               </span>
-              {played && (
+              {hasScore && (
                 <span className="font-display tabular-nums font-semibold shrink-0 text-charcoal-900 dark:text-sand">
                   {i === 0 ? match.result.scoreA : match.result.scoreB}
                   {match.result.wentToPenalties && (
@@ -89,6 +90,11 @@ function LiveMatchCard({ match, teamsByName, onSimulateMatch, onPredict, onEditM
                       {' '}({i === 0 ? match.result.penA : match.result.penB})
                     </span>
                   )}
+                </span>
+              )}
+              {played && !hasScore && isWinner && (
+                <span className="text-[10px] uppercase tracking-wide font-semibold text-forest dark:text-mint shrink-0">
+                  {t('play.advances')}
                 </span>
               )}
             </button>
@@ -115,6 +121,7 @@ function ResolvedMatchCard({ match, teamsByName, userNation, roundLabel }) {
   const teamA = teamsByName[match.teamA] || { name: match.teamA }
   const teamB = teamsByName[match.teamB] || { name: match.teamB }
   const isUserPath = userNation && (match.teamA === userNation || match.teamB === userNation)
+  const hasScore = match.scoreA != null
 
   return (
     <div className={`${CARD_BASE} ${isUserPath ? 'border-gold' : 'border-charcoal-900/10 dark:border-white/10'}`}>
@@ -133,14 +140,21 @@ function ResolvedMatchCard({ match, teamsByName, userNation, roundLabel }) {
                 <CountryFlag nation={team} size="md" />
                 <span className="truncate text-sm text-charcoal-900 dark:text-sand">{team.name}</span>
               </span>
-              <span className="font-display tabular-nums font-semibold shrink-0 text-charcoal-900 dark:text-sand">
-                {i === 0 ? match.scoreA : match.scoreB}
-                {match.wentToPenalties && (
-                  <span className="text-gold text-xs font-semibold">
-                    {' '}({i === 0 ? match.penA : match.penB})
-                  </span>
-                )}
-              </span>
+              {hasScore && (
+                <span className="font-display tabular-nums font-semibold shrink-0 text-charcoal-900 dark:text-sand">
+                  {i === 0 ? match.scoreA : match.scoreB}
+                  {match.wentToPenalties && (
+                    <span className="text-gold text-xs font-semibold">
+                      {' '}({i === 0 ? match.penA : match.penB})
+                    </span>
+                  )}
+                </span>
+              )}
+              {!hasScore && isWinner && (
+                <span className="text-[10px] uppercase tracking-wide font-semibold text-forest dark:text-mint shrink-0">
+                  {t('play.advances')}
+                </span>
+              )}
             </div>
           )
         })}
@@ -256,14 +270,19 @@ export default function KnockoutBracket({
               }
             }
 
+            // Very early rounds (e.g. a 32-team entry round has 16 matches)
+            // are laid out two-wide instead of one long vertical stack, so
+            // the column stays roughly half as tall without shrinking the
+            // cards or hiding anything.
+            const isWide = col.matchCount > 8
             return (
-              <div key={col.label + (col.customLabels ? '-final' : '')} ref={ref} className="shrink-0 w-56 snap-center space-y-3">
+              <div key={col.label + (col.customLabels ? '-final' : '')} ref={ref} className={`shrink-0 snap-center space-y-3 ${isWide ? 'w-[29rem]' : 'w-56'}`}>
                 {!col.customLabels && (
                   <p className="text-xs uppercase tracking-wide text-charcoal-600 dark:text-charcoal-300 font-semibold text-center">
                     {translateRoundLabel(col.label, t)}
                   </p>
                 )}
-                <div className="space-y-3">{cards}</div>
+                <div className={isWide ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>{cards}</div>
               </div>
             )
           })}

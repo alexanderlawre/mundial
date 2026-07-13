@@ -527,6 +527,29 @@ export function buildManualResult(teamAName, teamBName, scoreA, scoreB, tiebreak
   }
 }
 
+// Builds a match-result object for a manually-picked knockout winner --
+// deliberately carries no scoreline (scoreA/scoreB stay null), since a tap-
+// to-advance pick isn't a real result, just an outcome. `manualPick: true`
+// lets the UI distinguish this from a real simulateMatch()/buildManualResult()
+// scoreline so it can render "advances" instead of a fabricated 1-0.
+export function buildWinnerOnlyResult(teamAName, teamBName, winnerName) {
+  return {
+    teamA: teamAName,
+    teamB: teamBName,
+    scoreA: null,
+    scoreB: null,
+    scorersA: [],
+    scorersB: [],
+    stats: null,
+    wentToPenalties: false,
+    penA: null,
+    penB: null,
+    winner: winnerName,
+    played: true,
+    manualPick: true,
+  }
+}
+
 export function nextRoundPairs(teamNames) {
   const pairs = []
   for (let i = 0; i < teamNames.length; i += 2) {
