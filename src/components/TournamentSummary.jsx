@@ -2,6 +2,7 @@ import CountryFlag from './CountryFlag'
 import { useTranslation } from '../lib/i18n'
 
 function PodiumRow({ rank, label, name, teamsByName, highlight }) {
+  const { tn } = useTranslation()
   if (!name) return null
   const team = teamsByName[name]
   return (
@@ -12,7 +13,7 @@ function PodiumRow({ rank, label, name, teamsByName, highlight }) {
     >
       <span className="font-display text-xs font-bold text-charcoal-600 dark:text-charcoal-300 w-6 text-center shrink-0">{rank}</span>
       {team && <CountryFlag nation={team} size="sm" />}
-      <span className="text-sm font-semibold flex-1 min-w-0 truncate text-left">{name}</span>
+      <span className="text-sm font-semibold flex-1 min-w-0 truncate text-left">{tn(name)}</span>
       <span className="text-xs text-charcoal-600 dark:text-charcoal-300 shrink-0">{label}</span>
     </div>
   )
@@ -20,8 +21,8 @@ function PodiumRow({ rank, label, name, teamsByName, highlight }) {
 
 // End-of-tournament podium, in order: winner, runner-up, 3rd, 4th. (Each
 // team's full path through the tournament -- including where everyone else
-// was eliminated -- is shown right below this via the full-bracket
-// BracketTree recap, so it isn't duplicated here as a flat list.)
+// was eliminated -- is shown right below this via the compact BracketRecap
+// graphic, so it isn't duplicated here as a flat list.)
 export default function TournamentSummary({
   champion,
   runnerUp,

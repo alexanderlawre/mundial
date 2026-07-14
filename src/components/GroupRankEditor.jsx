@@ -17,7 +17,7 @@ function move(arr, idx, dir) {
 // array of team names to start from (e.g. re-opening a previously confirmed
 // order). `onConfirm(orderedNames)` / `onCancel()`.
 export default function GroupRankEditor({ teams, initialOrder, onConfirm, onCancel }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   const [order, setOrder] = useState(() => initialOrder || teams.map((team) => team.name))
   const byName = Object.fromEntries(teams.map((team) => [team.name, team]))
 
@@ -36,7 +36,7 @@ export default function GroupRankEditor({ teams, initialOrder, onConfirm, onCanc
             >
               <span className="text-xs text-charcoal-600 dark:text-charcoal-300 w-4 text-center font-semibold">{i + 1}</span>
               {team && <CountryFlag nation={team} size="sm" />}
-              <span className="flex-1 text-sm font-medium text-charcoal-900 dark:text-sand truncate">{name}</span>
+              <span className="flex-1 text-sm font-medium text-charcoal-900 dark:text-sand truncate">{tn(name)}</span>
               <button
                 type="button"
                 disabled={i === 0}

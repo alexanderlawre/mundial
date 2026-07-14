@@ -7,6 +7,7 @@ import { useTranslation, translateRoundLabel } from '../lib/i18n'
 // pick/flip the winner, or cosmetically "predict" it), or a dashed "TBD"
 // placeholder when this slot hasn't been fed a team yet.
 function TeamRow({ team, compact, isWinner, isPredicted, clickable, onClick, showScore, score, wentToPenalties, pen, showAdvances, tbdLabel, advancesLabel }) {
+  const { tn } = useTranslation()
   if (!team) {
     return (
       <div className="w-full flex items-center gap-2 rounded-lg px-1.5 py-1">
@@ -27,7 +28,7 @@ function TeamRow({ team, compact, isWinner, isPredicted, clickable, onClick, sho
     >
       <span className="flex items-center gap-2 min-w-0">
         <CountryFlag nation={team} size={compact ? 'sm' : 'md'} />
-        <span className={`truncate text-charcoal-900 dark:text-sand ${compact ? 'text-xs' : 'text-sm'}`}>{team.name}</span>
+        <span className={`truncate text-charcoal-900 dark:text-sand ${compact ? 'text-xs' : 'text-sm'}`}>{tn(team.name)}</span>
       </span>
       {showScore && (
         <span className="font-display tabular-nums font-semibold shrink-0 text-charcoal-900 dark:text-sand">

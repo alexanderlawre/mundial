@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { NATION_NAME_TRANSLATIONS } from '../data/nationTranslations'
 
 // Lightweight, dependency-free i18n: a flat-ish nested dictionary per
 // language, a React context + hook, and localStorage persistence. Scope is
@@ -12,6 +13,7 @@ export const LANGUAGES = [
   { code: 'es', label: 'Español', flagIso2: 'es' },
   { code: 'pt', label: 'Português', flagIso2: 'pt' },
   { code: 'fr', label: 'Français', flagIso2: 'fr' },
+  { code: 'de', label: 'Deutsch', flagIso2: 'de' },
 ]
 
 const LANGUAGE_KEY = 'mundial.language'
@@ -423,7 +425,108 @@ const fr = {
   },
 }
 
-const DICTS = { en, es, pt, fr }
+const de = {
+  common: { back: 'Zurück', home: 'Start' },
+  onboarding: {
+    subtitle: 'WM-Simulator',
+    nameLabel: 'Name',
+    namePlaceholder: 'Dein Name',
+    emailLabel: 'E-Mail',
+    emailPlaceholder: 'du@beispiel.com',
+    supportLabel: 'Land, das du unterstützt',
+    searchPlaceholder: 'Nationen suchen A-Z...',
+    all: 'Alle',
+    selected: 'ausgewählt',
+    noMatch: 'Keine Nation gefunden.',
+    enter: 'Mundial betreten',
+  },
+  dashboard: {
+    welcomeName: 'Willkommen, {name}',
+    welcomeGeneric: 'Willkommen bei Mundial',
+    supporting: 'Unterstützt {name}',
+    resetProfile: 'Profil zurücksetzen',
+    simulatorTitle: 'WM-Simulator',
+    simulatorDesc: 'Erstelle deine eigene WM mit 32 oder 48 Mannschaften. Wähle oder simuliere die Qualifikation, ordne die Auslosung und spiele sie durch.',
+    wc2026Title: 'Weltmeisterschaft 2026',
+    wc2026Desc: 'Das echte Turnier 2026: 12 offizielle Gruppen in den USA, Kanada und Mexiko.',
+    historicTitle: 'Historische Weltmeisterschaften',
+    historicDesc: 'Erlebe jede Weltmeisterschaft von 1930 bis 2022 mit den echten qualifizierten Teams und dem Gastgeberland erneut.',
+  },
+  play: {
+    group: 'Gruppe {letter}',
+    simulateNext: 'Nächstes Spiel simulieren',
+    simulateRestGroup: 'Rest der Gruppenphase simulieren',
+    viewGroupResults: 'Gruppenergebnisse anzeigen',
+    setFinalStandings: 'Endstand festlegen',
+    simulateMatches: 'Spiele simulieren',
+    pastResults: 'Bisherige Ergebnisse',
+    editStandings: 'Tabelle bearbeiten',
+    backToMatches: 'Zurück zu den Spielen',
+    continueThirdPlace: 'Weiter zur Drittplatzierten-Auswahl',
+    continueKnockouts: 'Weiter zur K.-o.-Runde',
+    confirmStartKnockouts: 'Bestätigen und K.-o.-Runde starten',
+    simulateRestBracket: 'Rest des Turnierbaums simulieren',
+    continue: 'Weiter',
+    simulateMatch: '{label} simulieren',
+    champions: 'Champions',
+    simulateAgain: 'Erneut simulieren',
+    groupStageResults: 'Ergebnisse der Gruppenphase',
+    bestThirdPlace: 'Beste Drittplatzierte',
+    simulateMatchButton: 'Spiel simulieren',
+    editResult: 'Ergebnis bearbeiten',
+    setResult: 'Ergebnis festlegen',
+    sideA: 'Seite A',
+    sideB: 'Seite B',
+    tournamentBracket: 'Turnierbaum',
+    tbd: 'Offen',
+    tapToSetWinner: 'Tippe auf ein Team, um den Sieger festzulegen',
+    advancing: 'Weiter zur nächsten Runde\u2026',
+    crowningChampion: 'Champion wird gekrönt\u2026',
+    advances: 'Zieht ein',
+    hide: 'Ausblenden',
+    show: 'Anzeigen',
+    upNext: 'Als Nächstes',
+    noGoals: 'Keine Tore',
+    vs: 'gegen',
+    team: 'Team',
+    played: 'Sp',
+    won: 'S',
+    drawn: 'U',
+    lost: 'N',
+    gd: 'TD',
+    pts: 'Pkt',
+    pickBestThirds: 'Wähle die besten {needed} Drittplatzierten ({selected}/{needed})',
+    autoFillBest: 'Beste {needed} automatisch auswählen',
+    grp: 'Grp {letter}',
+    ptsGdGf: '{points} Pkt · TD {gd} · {gf} Tore',
+    setFinalStandingsOrder: 'Endstand festlegen (1. bis Letzter)',
+    moveUp: '{name} nach oben verschieben',
+    moveDown: '{name} nach unten verschieben',
+    cancel: 'Abbrechen',
+    confirmStandings: 'Tabelle bestätigen',
+    levelScorePickWinner: 'Unentschieden \u2014 Sieger auswählen',
+    saveResult: 'Ergebnis speichern',
+  },
+  rounds: {
+    Final: 'Finale',
+    Semifinals: 'Halbfinale',
+    Quarterfinals: 'Viertelfinale',
+    'Round of 16': 'Achtelfinale',
+    'Round of 32': 'Sechzehntelfinale',
+    '3rd Place Playoff': 'Spiel um Platz drei',
+  },
+  summary: {
+    finalResults: 'Endergebnisse des Turniers',
+    winner: 'Sieger',
+    runnerUp: 'Zweiter Platz',
+    thirdPlace: 'Dritter Platz',
+    fourthPlace: 'Vierter Platz',
+    qfExits: 'Ausgeschieden im Viertelfinale',
+    r16Exits: 'Ausgeschieden im Achtelfinale',
+  },
+}
+
+const DICTS = { en, es, pt, fr, de }
 
 function getNested(dict, path) {
   return path.split('.').reduce((acc, k) => (acc && acc[k] != null ? acc[k] : null), dict)
@@ -458,6 +561,20 @@ export function translateRoundLabel(label, t) {
   return t(`rounds.${label}`, null, label)
 }
 
+// Translates a nation's canonical English `name` (as stored in
+// data/nations.js and used everywhere as the stable identifier) into the
+// given display language, for *display only* -- the underlying English
+// name is still what's stored in state/matchState/profile and used for
+// equality checks and lookups elsewhere, so nothing about simulation or
+// bracket logic is ever affected by the active language. Falls back to the
+// English name for the ~40% of (mostly small/obscure) nations whose name is
+// identical across languages, and for English itself.
+export function translateNationName(name, language) {
+  if (!name || language === 'en') return name
+  const table = NATION_NAME_TRANSLATIONS[language]
+  return (table && table[name]) || name
+}
+
 const LanguageContext = createContext(null)
 
 export function LanguageProvider({ children }) {
@@ -479,7 +596,9 @@ export function LanguageProvider({ children }) {
     return interpolate(val, vars)
   }, [language])
 
-  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t])
+  const tn = useCallback((name) => translateNationName(name, language), [language])
+
+  const value = useMemo(() => ({ language, setLanguage, t, tn }), [language, setLanguage, t, tn])
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }

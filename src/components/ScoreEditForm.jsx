@@ -9,7 +9,7 @@ import { useTranslation } from '../lib/i18n'
 // winner (shown as a simple penalty-shootout style pick) since knockout
 // matches can't end in a draw.
 export default function ScoreEditForm({ teamA, teamB, initialScoreA = 0, initialScoreB = 0, requireWinner = false, onSave, onCancel }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   const [scoreA, setScoreA] = useState(initialScoreA)
   const [scoreB, setScoreB] = useState(initialScoreB)
   const [tiebreakWinner, setTiebreakWinner] = useState(null)
@@ -26,7 +26,7 @@ export default function ScoreEditForm({ teamA, teamB, initialScoreA = 0, initial
   return (
     <div className="rounded-xl bg-sand/60 dark:bg-night/60 border border-charcoal-900/10 dark:border-white/10 p-3 space-y-3">
       <div className="flex items-center justify-center gap-3">
-        <span className="text-xs font-medium text-charcoal-900 dark:text-sand truncate flex-1 text-right">{teamA.name}</span>
+        <span className="text-xs font-medium text-charcoal-900 dark:text-sand truncate flex-1 text-right">{tn(teamA.name)}</span>
         <input
           type="number"
           min="0"
@@ -42,7 +42,7 @@ export default function ScoreEditForm({ teamA, teamB, initialScoreA = 0, initial
           onChange={(e) => setScoreB(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
           className="w-14 text-center rounded-lg border border-charcoal-900/20 dark:border-white/20 bg-white dark:bg-night-card py-1 font-display font-bold tabular-nums"
         />
-        <span className="text-xs font-medium text-charcoal-900 dark:text-sand truncate flex-1">{teamB.name}</span>
+        <span className="text-xs font-medium text-charcoal-900 dark:text-sand truncate flex-1">{tn(teamB.name)}</span>
       </div>
 
       {needsTiebreak && (
@@ -57,7 +57,7 @@ export default function ScoreEditForm({ teamA, teamB, initialScoreA = 0, initial
               className="flex-1"
               onClick={() => setTiebreakWinner(teamA.name)}
             >
-              {teamA.name}
+              {tn(teamA.name)}
             </SambaButton>
             <SambaButton
               size="sm"
@@ -65,7 +65,7 @@ export default function ScoreEditForm({ teamA, teamB, initialScoreA = 0, initial
               className="flex-1"
               onClick={() => setTiebreakWinner(teamB.name)}
             >
-              {teamB.name}
+              {tn(teamB.name)}
             </SambaButton>
           </div>
         </div>

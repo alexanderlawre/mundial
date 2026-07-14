@@ -10,9 +10,11 @@ import SambaButton from '../components/SambaButton'
 import AppBackground from '../components/AppBackground'
 import NavBar from '../components/NavBar'
 import MatchCard from '../components/MatchCard'
+import { useTranslation } from '../lib/i18n'
 
 export default function SimulatorSetup() {
   const navigate = useNavigate()
+  const { tn } = useTranslation()
   const [teamCount, setTeamCount] = useState(null)
   const [picked, setPicked] = useState({}) // confederation -> [nation names]
 
@@ -186,7 +188,7 @@ export default function SimulatorSetup() {
                           ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
                         <CountryFlag nation={n} size="sm" />
-                        <span className="truncate text-charcoal-900 dark:text-sand">{n.name}</span>
+                        <span className="truncate text-charcoal-900 dark:text-sand">{tn(n.name)}</span>
                       </button>
                     )
                   })}
@@ -230,7 +232,7 @@ export default function SimulatorSetup() {
                           >
                             <option value="">Choose {conf} team&hellip;</option>
                             {options.map((n) => (
-                              <option key={n.name} value={n.name}>{n.name}</option>
+                              <option key={n.name} value={n.name}>{tn(n.name)}</option>
                             ))}
                           </select>
                         </div>
@@ -262,7 +264,7 @@ export default function SimulatorSetup() {
                         teamB={buildTeam(entrants[2])}
                         label="Final"
                       />
-                      <p className="text-center text-sm text-charcoal-900 dark:text-sand font-semibold">Winner: {result.winner}</p>
+                      <p className="text-center text-sm text-charcoal-900 dark:text-sand font-semibold">Winner: {tn(result.winner)}</p>
                     </div>
                   )}
                 </div>

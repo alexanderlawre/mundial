@@ -2,7 +2,7 @@ import CountryFlag from './CountryFlag'
 import { useTranslation } from '../lib/i18n'
 
 export default function GroupTable({ letter, standings, teamsByName, advanceCount = 2 }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   return (
     <div className="rounded-2xl bg-white dark:bg-night-card border border-charcoal-900/10 dark:border-white/10 shadow-depth overflow-hidden">
       <div className="px-4 py-2 bg-forest text-white font-display font-semibold">{t('play.group', { letter })}</div>
@@ -35,7 +35,7 @@ export default function GroupTable({ letter, standings, teamsByName, advanceCoun
                       {team.fifaCode}
                     </span>
                   )}
-                  <span className="font-medium text-charcoal-900 dark:text-sand truncate">{row.team}</span>
+                  <span className="font-medium text-charcoal-900 dark:text-sand truncate">{tn(row.team)}</span>
                 </td>
                 <td className="text-center">{row.played}</td>
                 <td className="text-center">{row.won}</td>

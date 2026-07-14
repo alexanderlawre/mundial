@@ -37,10 +37,11 @@ function TeamMini({ team, align }) {
 }
 
 function TeamHero({ team, align }) {
+  const { tn } = useTranslation()
   return (
     <div className={`flex flex-col items-center gap-2 flex-1 min-w-0 ${align === 'right' ? 'items-end' : 'items-start'} sm:items-center`}>
       <CountryFlag nation={team} size="lg" />
-      <span className="font-display font-bold text-charcoal-900 dark:text-sand text-sm truncate max-w-full">{team.name}</span>
+      <span className="font-display font-bold text-charcoal-900 dark:text-sand text-sm truncate max-w-full">{tn(team.name)}</span>
       <FifaCode team={team} />
     </div>
   )
@@ -51,7 +52,7 @@ function TeamHero({ team, align }) {
 // scoreline (and, for knockout matches, `requireWinner` forces a tiebreak
 // pick on a level score, since knockouts can't stay drawn).
 export default function MatchCard({ match, teamA, teamB, label, variant = 'default', onEdit, requireWinner = false }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   const [editing, setEditing] = useState(false)
   const editable = typeof onEdit === 'function'
 
@@ -169,11 +170,11 @@ export default function MatchCard({ match, teamA, teamB, label, variant = 'defau
       <div className="rounded-2xl bg-white/80 dark:bg-night-card/80 border border-charcoal-900/10 dark:border-white/10 shadow-depth p-4 flex items-center justify-between opacity-60">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <CountryFlag nation={teamA} size="sm" />
-          <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamA.name}</span>
+          <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{tn(teamA.name)}</span>
         </div>
         <span className="font-display text-charcoal-600 dark:text-charcoal-300 text-sm px-2 shrink-0">{t('play.vs')}</span>
         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamB.name}</span>
+          <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{tn(teamB.name)}</span>
           <CountryFlag nation={teamB} size="sm" />
         </div>
       </div>
@@ -188,11 +189,11 @@ export default function MatchCard({ match, teamA, teamB, label, variant = 'defau
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <CountryFlag nation={teamA} size="sm" />
-                <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamA.name}</span>
+                <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{tn(teamA.name)}</span>
               </div>
               <span className="font-display text-charcoal-600 dark:text-charcoal-300 text-sm px-2 shrink-0">{t('play.vs')}</span>
               <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{teamB.name}</span>
+                <span className="text-sm font-medium text-charcoal-600 dark:text-sand truncate">{tn(teamB.name)}</span>
                 <CountryFlag nation={teamB} size="sm" />
               </div>
             </div>
@@ -214,7 +215,7 @@ export default function MatchCard({ match, teamA, teamB, label, variant = 'defau
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <CountryFlag nation={teamA} size="sm" />
               <FifaCode team={teamA} />
-              <span className="font-display font-medium text-charcoal-900 dark:text-sand truncate">{teamA.name}</span>
+              <span className="font-display font-medium text-charcoal-900 dark:text-sand truncate">{tn(teamA.name)}</span>
             </div>
 
             <div className="flex items-center justify-center shrink-0 px-2">
@@ -227,7 +228,7 @@ export default function MatchCard({ match, teamA, teamB, label, variant = 'defau
             </div>
 
             <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-              <span className="font-display font-medium text-charcoal-900 dark:text-sand truncate">{teamB.name}</span>
+              <span className="font-display font-medium text-charcoal-900 dark:text-sand truncate">{tn(teamB.name)}</span>
               <FifaCode team={teamB} />
               <CountryFlag nation={teamB} size="sm" />
             </div>

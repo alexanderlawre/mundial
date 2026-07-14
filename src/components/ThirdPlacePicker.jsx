@@ -4,7 +4,7 @@ import { useTranslation } from '../lib/i18n'
 
 // rows: array of { team, groupLetter, played, won, drawn, lost, gf, ga, gd, points }
 export default function ThirdPlacePicker({ rows, teamsByName, needed, selected, onToggle, onAutoFill }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   return (
     <div className="rounded-2xl bg-white dark:bg-night-card border border-charcoal-900/10 dark:border-white/10 shadow-depth p-4">
       <div className="flex items-center justify-between mb-3">
@@ -29,7 +29,7 @@ export default function ThirdPlacePicker({ rows, teamsByName, needed, selected, 
             >
               {team && <CountryFlag nation={team} size="sm" />}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-charcoal-900 dark:text-sand truncate">{row.team} <span className="text-charcoal-600 dark:text-charcoal-300 text-xs">({t('play.grp', { letter: row.groupLetter })})</span></p>
+                <p className="text-sm font-medium text-charcoal-900 dark:text-sand truncate">{tn(row.team)} <span className="text-charcoal-600 dark:text-charcoal-300 text-xs">({t('play.grp', { letter: row.groupLetter })})</span></p>
                 {!row.isManual && (
                   <p className="text-xs text-charcoal-600 dark:text-charcoal-300 tabular-nums">{t('play.ptsGdGf', { points: row.points, gd: row.gd > 0 ? `+${row.gd}` : row.gd, gf: row.gf })}</p>
                 )}

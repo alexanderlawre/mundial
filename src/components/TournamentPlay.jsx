@@ -19,6 +19,7 @@ import { logSimulationResult } from '../lib/storage'
 import MatchCard from './MatchCard'
 import GroupTable from './GroupTable'
 import BracketTree from './BracketTree'
+import BracketRecap from './BracketRecap'
 import ThirdPlacePicker from './ThirdPlacePicker'
 import GroupRankEditor from './GroupRankEditor'
 import TournamentSummary from './TournamentSummary'
@@ -53,7 +54,7 @@ function manualStandingRows(order) {
 // order (rank + flag + name) -- no points/W-D-L/GD, since none of that was
 // actually played out.
 function ManualStandingsList({ letter, order, teamsByName, advanceCount }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   return (
     <div className="rounded-2xl bg-white dark:bg-night-card border border-charcoal-900/10 dark:border-white/10 shadow-depth overflow-hidden">
       <div className="px-4 py-2 bg-forest text-white font-display font-semibold">{t('play.group', { letter })}</div>
@@ -70,7 +71,7 @@ function ManualStandingsList({ letter, order, teamsByName, advanceCount }) {
                   {team.fifaCode}
                 </span>
               )}
-              <span className="font-medium truncate">{name}</span>
+              <span className="font-medium truncate">{tn(name)}</span>
             </div>
           )
         })}
@@ -118,7 +119,7 @@ export default function TournamentPlay({
   mode,                   // 'historic' | 'custom' | 'wc2026' -- for analytics logging
   descriptor,             // year (historic) / team count (custom) / '2026' (wc2026) -- for analytics logging
 }) {
-  const { t } = useTranslation()
+  const { t, tn } = useTranslation()
   const teamsByName = useMemo(() => {
     const map = {}
     if (initialGroups) {
@@ -633,7 +634,7 @@ export default function TournamentPlay({
         <p className="uppercase tracking-widest text-gold font-semibold mb-3">{t('play.champions')}</p>
         <div className="flex flex-col items-center gap-4 mb-6">
           <CountryFlag nation={championTeam} size="xl" />
-          <h1 className="font-display text-4xl font-extrabold text-forest dark:text-mint">{champion}</h1>
+          <h1 className="font-display text-4xl font-extrabold text-forest dark:text-mint">{tn(champion)}</h1>
           <p className="text-charcoal-600 dark:text-charcoal-300">{title}{hostLabel ? ` · ${hostLabel}` : ''}</p>
         </div>
         <div className="mb-6">
@@ -645,16 +646,11 @@ export default function TournamentPlay({
             teamsByName={teamsByName}
           />
         </div>
-        <BracketTree
+        <BracketRecap
           skeleton={bracketSkeleton}
           matchState={matchState}
           teamsByName={teamsByName}
-          interactive={interactivity === 'full'}
-          allowPredict={interactivity === 'simulateOnly'}
-          onSimulateMatch={simulateKnockoutMatchById}
-          onEditMatch={interactivity === 'full' ? editKnockoutMatchResult : undefined}
-          onPredict={setKnockoutPrediction}
-          userNation={userNation}
+          champion={champion}
         />
         <div className="mt-8">
           <SambaButton variant="gold" size="lg" onClick={onRestart}>{t('play.simulateAgain')}</SambaButton>
