@@ -7,6 +7,8 @@ import SimulatorPlay from './pages/SimulatorPlay'
 import WC2026 from './pages/WC2026'
 import HistoricCups from './pages/HistoricCups'
 import HistoricPlay from './pages/HistoricPlay'
+import LeaguesHub from './pages/LeaguesHub'
+import LeaguePredict from './pages/LeaguePredict'
 import Admin from './pages/Admin'
 import AdminDetail from './pages/AdminDetail'
 import PrivacyPolicy from './pages/legal/PrivacyPolicy'
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/wc2026" element={<WC2026 />} />
         <Route path="/historic" element={<HistoricCups />} />
         <Route path="/historic/:year" element={<HistoricPlay />} />
+        <Route path="/leagues" element={<LeaguesHub />} />
+        <Route path="/leagues/:leagueKey" element={<LeaguePredict />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/detail" element={<AdminDetail />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

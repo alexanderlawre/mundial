@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { clearProfile, clearActiveTournament, getProfile } from '../lib/storage'
+import { clearProfile, clearActiveTournament, clearAllLeaguePredictions, getProfile } from '../lib/storage'
 import { useTranslation } from '../lib/i18n'
 
 // Icon button that clears the local profile and any in-progress tournament,
@@ -20,6 +20,7 @@ export default function ResetProfileButton() {
     if (!window.confirm(t('dashboard.resetProfileConfirm'))) return
     clearProfile()
     clearActiveTournament()
+    clearAllLeaguePredictions()
     navigate('/')
   }
 

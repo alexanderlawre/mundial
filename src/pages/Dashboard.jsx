@@ -7,6 +7,13 @@ import { useTranslation } from '../lib/i18n'
 
 const MODES = [
   {
+    key: 'leagues',
+    titleKey: 'leagues.modeTitle',
+    descKey: 'leagues.modeDesc',
+    path: '/leagues',
+    accent: 'bg-gradient-to-r from-[#3D195B] via-[#EE2523] to-[#008C45]',
+  },
+  {
     key: 'simulator',
     titleKey: 'dashboard.simulatorTitle',
     descKey: 'dashboard.simulatorDesc',

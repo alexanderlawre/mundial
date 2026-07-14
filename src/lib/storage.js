@@ -1,5 +1,6 @@
 const PROFILE_KEY = 'mundial.profile'
 const TOURNAMENT_KEY = 'mundial.activeTournament'
+const LEAGUE_PREDICTIONS_KEY = 'mundial.leaguePredictions'
 
 function safeParse(raw, fallback) {
   try {
@@ -31,6 +32,39 @@ export function saveActiveTournament(state) {
 
 export function clearActiveTournament() {
   localStorage.removeItem(TOURNAMENT_KEY)
+}
+
+// ---------- "Predict the League" predictions ----------
+// Dictionary keyed by league so a user can have independent in-progress /
+// confirmed predictions for all leagues at once. Shape per entry:
+// { order: (string|null)[20], confirmed: boolean, updatedAt: number }
+// order[i] = club key at table position i (0 = 1st place), or null for an
+// empty slot. The unplaced pool is never stored here -- it's always
+// derived (alphabeticalClubKeys(league) minus non-null order entries) so
+// pool and table can never desync.
+
+export function getLeaguePredictions() {
+  return safeParse(localStorage.getItem(LEAGUE_PREDICTIONS_KEY), {})
+}
+
+export function getLeaguePrediction(leagueKey) {
+  return getLeaguePredictions()[leagueKey] || null
+}
+
+export function saveLeaguePrediction(leagueKey, state) {
+  const all = getLeaguePredictions()
+  all[leagueKey] = { ...all[leagueKey], ...state, updatedAt: Date.now() }
+  localStorage.setItem(LEAGUE_PREDICTIONS_KEY, JSON.stringify(all))
+}
+
+export function clearLeaguePrediction(leagueKey) {
+  const all = getLeaguePredictions()
+  delete all[leagueKey]
+  localStorage.setItem(LEAGUE_PREDICTIONS_KEY, JSON.stringify(all))
+}
+
+export function clearAllLeaguePredictions() {
+  localStorage.removeItem(LEAGUE_PREDICTIONS_KEY)
 }
 
 // ---------- Analytics (shared across all visitors via serverless API +
