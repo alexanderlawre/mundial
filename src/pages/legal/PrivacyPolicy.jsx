@@ -10,18 +10,26 @@ export default function PrivacyPolicy() {
       </p>
 
       <h2>1. Information We Collect</h2>
-      <p>When you create a profile to use Mundial, we collect:</p>
+      <p>When you create an account to use Mundial, we collect:</p>
       <ul>
         <li>Name</li>
         <li>Email address</li>
-        <li>Supported team (the national team you choose to follow)</li>
+        <li>Password (stored as a secure hash by our authentication provider — we never store or share it in plain text)</li>
+        <li>Favorite/supported team (the national team you choose to follow)</li>
       </ul>
       <p>
-        We also automatically log simulation results (tournament mode, team
-        counts, and outcomes such as winner/runner-up/third/fourth place)
-        generated when you run a simulation. These logs are not displayed
-        back to you or other users tied to your identity — they're kept as
-        a separate usage log for aggregate statistics.
+        We also store the tables you submit for our league prediction games
+        and a history of the World Cup simulations you complete while
+        signed in, so they can be shown back to you on your Account page
+        across devices.
+      </p>
+      <p>
+        Separately, we automatically log anonymized simulation results
+        (tournament mode, team counts, and outcomes such as
+        winner/runner-up/third/fourth place) generated when anyone runs a
+        simulation. These logs are not displayed back to you or other users
+        tied to your identity — they're kept as a separate usage log for
+        aggregate statistics.
       </p>
       <p>
         Standard technical data (such as IP address and request metadata)
@@ -39,10 +47,15 @@ export default function PrivacyPolicy() {
 
       <h2>3. Where Data Is Stored</h2>
       <p>
-        Signup and simulation data is stored using Upstash Redis, accessed
-        through serverless functions hosted on Vercel. Access is restricted
-        to the app administrator via a password-protected admin view. We do
-        not display your name or email to other users of the app.
+        Account data (name, email, hashed password, favorite team,
+        submitted tables, and simulation history) is stored and managed by
+        Supabase, our authentication and database provider. Anonymized
+        signup and simulation logs used for aggregate statistics are stored
+        separately using Upstash Redis, accessed through serverless
+        functions hosted on Vercel. Access to the aggregate log is
+        restricted to the app administrator via a password-protected admin
+        view. We do not display your name or email to other users of the
+        app.
       </p>
 
       <h2>4. Sharing, Transfer, and Possible Sale of Information</h2>
@@ -69,6 +82,7 @@ export default function PrivacyPolicy() {
       <ul>
         <li><strong>Vercel</strong> — application hosting and serverless functions</li>
         <li><strong>Upstash</strong> — Redis-based data storage</li>
+        <li><strong>Supabase</strong> — account authentication and database storage</li>
       </ul>
 
       <h2>6. Cookies and Local Storage</h2>

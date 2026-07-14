@@ -16,14 +16,14 @@ export default function LanguageSelector() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Change language"
         aria-expanded={open}
-        className="w-9 h-9 rounded-full bg-white dark:bg-night-card shadow-depth border border-charcoal-900/10 dark:border-white/10 flex items-center justify-center overflow-hidden hover:bg-sand dark:hover:bg-night active:scale-95 transition-all"
+        className="w-7 h-7 rounded-full bg-white dark:bg-night-card shadow-depth border border-charcoal-900/10 dark:border-white/10 flex items-center justify-center overflow-hidden hover:bg-sand dark:hover:bg-night active:scale-95 transition-all"
       >
         <span className={`fi fis fi-${current.flagIso2} block !w-full !h-full bg-cover bg-center`} />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-11 z-20 w-40 rounded-xl bg-white dark:bg-night-card shadow-depth-lg border border-charcoal-900/10 dark:border-white/10 overflow-hidden py-1">
+          <div className="absolute right-0 top-9 z-20 w-40 rounded-xl bg-white dark:bg-night-card shadow-depth-lg border border-charcoal-900/10 dark:border-white/10 overflow-hidden py-1">
             {LANGUAGES.map((l) => (
               <button
                 key={l.code}

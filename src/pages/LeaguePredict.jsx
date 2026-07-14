@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getLeague, clubsByKey } from '../data/leagues'
 import { getNation } from '../data/nations'
-import { getLeaguePrediction, saveLeaguePrediction } from '../lib/storage'
+import { getLeaguePrediction, saveLeaguePrediction, syncLeaguePredictionToCloud } from '../lib/storage'
+import { useAuth } from '../lib/AuthContext'
 import AppBackground from '../components/AppBackground'
 import CountryFlag from '../components/CountryFlag'
 import ClubBadge from '../components/leagues/ClubBadge'
@@ -34,6 +35,7 @@ export default function LeaguePredict() {
   const { leagueKey } = useParams()
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { user } = useAuth()
   const league = getLeague(leagueKey)
   const [prediction, setPrediction] = useState(() => (league ? getLeaguePrediction(league.key) : null))
   const [editing, setEditing] = useState(() => !prediction || !prediction.confirmed)
@@ -57,6 +59,7 @@ export default function LeaguePredict() {
     saveLeaguePrediction(league.key, { order: table, confirmed: true })
     setPrediction({ order: table, confirmed: true })
     setEditing(false)
+    syncLeaguePredictionToCloud(user?.id, league.key, { order: table, confirmed: true })
   }
 
   function handleEdit() {

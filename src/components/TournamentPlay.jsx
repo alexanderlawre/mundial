@@ -15,7 +15,8 @@ import {
   buildWinnerOnlyResult,
 } from '../lib/tournamentEngine'
 import { simulateMatch } from '../lib/matchEngine'
-import { logSimulationResult } from '../lib/storage'
+import { logSimulationResult, syncSimulationToCloud } from '../lib/storage'
+import { useAuth } from '../lib/AuthContext'
 import MatchCard from './MatchCard'
 import GroupTable from './GroupTable'
 import BracketTree from './BracketTree'
@@ -120,6 +121,7 @@ export default function TournamentPlay({
   descriptor,             // year (historic) / team count (custom) / '2026' (wc2026) -- for analytics logging
 }) {
   const { t, tn } = useTranslation()
+  const { user } = useAuth()
   const teamsByName = useMemo(() => {
     const map = {}
     if (initialGroups) {
@@ -439,15 +441,17 @@ export default function TournamentPlay({
   useEffect(() => {
     if (stage !== 'celebration' || loggedRef.current || !mode) return
     loggedRef.current = true
-    logSimulationResult({
+    const entry = {
       mode,
       descriptor,
       winner: champion,
       runnerUp: runnerUpTeam,
       third: thirdPlaceTeam,
       fourth: fourthPlaceTeam,
-    })
-  }, [stage, mode, descriptor, champion, runnerUpTeam, thirdPlaceTeam, fourthPlaceTeam])
+    }
+    logSimulationResult(entry)
+    syncSimulationToCloud(user?.id, entry)
+  }, [stage, mode, descriptor, champion, runnerUpTeam, thirdPlaceTeam, fourthPlaceTeam, user])
 
   // ---------- Render ----------
 

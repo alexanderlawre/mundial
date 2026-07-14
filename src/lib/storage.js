@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient'
+
 const PROFILE_KEY = 'mundial.profile'
 const TOURNAMENT_KEY = 'mundial.activeTournament'
 const LEAGUE_PREDICTIONS_KEY = 'mundial.leaguePredictions'
@@ -112,5 +114,73 @@ export async function fetchAdminData(password) {
     return { ok: true, signups: data.signups || [], simulations: data.simulations || [] }
   } catch {
     return { ok: false, unauthorized: false }
+  }
+}
+
+// ---------- Per-account cloud sync (Supabase) ----------
+// Mirrors league predictions and completed-simulation results into the
+// logged-in user's own Supabase tables (league_predictions,
+// simulation_history -- RLS-protected, see the Phase 2 plan for schema),
+// so the Account page can show them across devices. Same fire-and-forget,
+// error-swallowing convention as the analytics functions above: local
+// (`saveLeaguePrediction`) always stays the source of truth for gameplay,
+// cloud sync is a best-effort mirror that never blocks the UI.
+
+export async function syncLeaguePredictionToCloud(userId, leagueKey, state) {
+  if (!userId) return
+  try {
+    await supabase.from('league_predictions').upsert({
+      user_id: userId,
+      league_key: leagueKey,
+      club_order: state.order,
+      confirmed: !!state.confirmed,
+      updated_at: new Date().toISOString(),
+    })
+  } catch {
+    // best-effort only
+  }
+}
+
+export async function fetchCloudLeaguePredictions(userId) {
+  if (!userId) return {}
+  try {
+    const { data, error } = await supabase.from('league_predictions').select('*').eq('user_id', userId)
+    if (error || !data) return {}
+    return Object.fromEntries(data.map((row) => [row.league_key, { order: row.club_order, confirmed: row.confirmed, updatedAt: row.updated_at }]))
+  } catch {
+    return {}
+  }
+}
+
+// entry: { mode, descriptor, winner, runnerUp, third, fourth }
+export async function syncSimulationToCloud(userId, entry) {
+  if (!userId) return
+  try {
+    await supabase.from('simulation_history').insert({
+      user_id: userId,
+      mode: entry.mode,
+      descriptor: entry.descriptor,
+      winner: entry.winner,
+      runner_up: entry.runnerUp,
+      third: entry.third,
+      fourth: entry.fourth,
+    })
+  } catch {
+    // best-effort only
+  }
+}
+
+export async function fetchCloudSimulationHistory(userId) {
+  if (!userId) return []
+  try {
+    const { data, error } = await supabase
+      .from('simulation_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    if (error || !data) return []
+    return data
+  } catch {
+    return []
   }
 }
