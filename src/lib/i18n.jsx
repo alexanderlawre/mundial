@@ -11,7 +11,7 @@ import { NATION_NAME_TRANSLATIONS } from '../data/nationTranslations'
 export const LANGUAGES = [
   { code: 'en', label: 'English', flagIso2: 'gb' },
   { code: 'es', label: 'Español', flagIso2: 'es' },
-  { code: 'pt', label: 'Português', flagIso2: 'pt' },
+  { code: 'pt', label: 'Português', flagIso2: 'br' },
   { code: 'fr', label: 'Français', flagIso2: 'fr' },
   { code: 'de', label: 'Deutsch', flagIso2: 'de' },
 ]
