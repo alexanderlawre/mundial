@@ -18,13 +18,19 @@ function initials(name) {
     .toUpperCase() || name.slice(0, 2).toUpperCase()
 }
 
-// Club crest. Real crests render "bare" -- no filled/bordered frame box
-// around them, just a drop-shadow for legibility against any background --
-// since the source images are already self-contained badge artwork and a
-// white card behind them just adds visual clutter/redundant chrome. Only
-// the monogram (initials) fallback -- used when a club has no badgeUrl or
-// its image fails to load -- keeps a solid colored circle background,
-// since raw initials need *some* backing to stay legible and on-brand.
+// Club crest. Real crests render inside a fixed-size "coin" wrapper -- just
+// a drop-shadow for legibility against any background, no filled/bordered
+// frame -- since source crests come from many different providers with
+// wildly inconsistent internal padding (some SVGs are a tight circle that
+// fills its viewBox, others have huge invisible margins around a small
+// mark), which otherwise makes logos read as very different sizes even
+// though their <img> box is identical. Sizing the wrapper (not the <img>)
+// and letting the image itself sit at a slightly-inset 82% with
+// object-contain keeps every club's *visual footprint* uniform regardless
+// of its source file's padding. Only the monogram (initials) fallback --
+// used when a club has no badgeUrl or its image fails to load -- keeps a
+// solid colored circle background, since raw initials need *some* backing
+// to stay legible and on-brand.
 // crossOrigin="anonymous" is required for a clean html2canvas capture
 // later even though the badge hosts already send open CORS headers.
 export default function ClubBadge({ club, size = 'md', accent = '#12805C', className = '' }) {
@@ -35,13 +41,15 @@ export default function ClubBadge({ club, size = 'md', accent = '#12805C', class
 
   if (showImage) {
     return (
-      <img
-        src={club.badgeUrl}
-        alt={club.name}
-        crossOrigin="anonymous"
-        className={`object-contain shrink-0 drop-shadow-md ${sizeClass} ${className}`}
-        onError={() => setFailed(true)}
-      />
+      <span className={`inline-flex items-center justify-center shrink-0 ${sizeClass} ${className}`}>
+        <img
+          src={club.badgeUrl}
+          alt={club.name}
+          crossOrigin="anonymous"
+          className="w-[82%] h-[82%] object-contain drop-shadow-md"
+          onError={() => setFailed(true)}
+        />
+      </span>
     )
   }
 

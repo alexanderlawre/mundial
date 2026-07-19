@@ -34,7 +34,7 @@ export default function LeagueTableSlot({ index, club, accent, interactive, zone
       ref={setRefs}
       {...dragProps}
       onClick={interactive ? onClick : undefined}
-      className={`flex items-center gap-3 px-3 py-2 rounded-xl border-4 border-y border-r transition-all touch-none
+      className={`flex items-center gap-3 px-3 py-2 rounded-xl border-4 border-y border-r transition-all touch-pan-y
         ${isOver ? 'ring-2 ring-gold bg-gold/10' : selected ? 'ring-2 ring-blue-500 bg-blue-500/10 border-blue-500' : 'bg-white/90 dark:bg-night-card/90 border-y-charcoal-900/10 dark:border-y-white/10 border-r-charcoal-900/10 dark:border-r-white/10'}
         ${isDragging ? 'opacity-30' : ''}
         ${interactive && club ? 'cursor-grab active:cursor-grabbing' : interactive ? 'cursor-pointer' : ''}

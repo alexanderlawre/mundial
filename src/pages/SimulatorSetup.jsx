@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { nationsByConfederation, CONFEDERATIONS } from '../data/nations'
-import { getQuotas, totalFromQuotas, PLAYOFF_PATHS_48 } from '../data/confederationQuotas'
+import { getQuotas, totalFromQuotas, PLAYOFF_PATHS, PLAYOFF_TEAM_COUNTS } from '../data/confederationQuotas'
 import { getRating } from '../data/ratings'
 import { simulateFullQualifying, simulateQualifyingForConfederation } from '../lib/qualifying'
 import { buildTeam, simulateInterconfedPlayoff } from '../lib/tournamentEngine'
@@ -25,10 +25,11 @@ export default function SimulatorSetup() {
     [picked]
   )
 
-  // Intercontinental playoff (48-team format only): 2 mini-knockouts decide
-  // the last 2 slots beyond the 46 direct quota picks.
-  const [playoffEntrants, setPlayoffEntrants] = useState(() => PLAYOFF_PATHS_48.map((p) => p.legs.map(() => null)))
-  const [playoffResults, setPlayoffResults] = useState(() => PLAYOFF_PATHS_48.map(() => null))
+  // Intercontinental playoff (48- and 64-team formats only): 2 mini-knockouts
+  // decide the last 2 slots beyond the direct quota picks.
+  const hasPlayoff = PLAYOFF_TEAM_COUNTS.includes(teamCount)
+  const [playoffEntrants, setPlayoffEntrants] = useState(() => PLAYOFF_PATHS.map((p) => p.legs.map(() => null)))
+  const [playoffResults, setPlayoffResults] = useState(() => PLAYOFF_PATHS.map(() => null))
 
   const playoffUsedNames = useMemo(() => {
     const names = new Set(pickedFlat.map((t) => t.name))
@@ -49,7 +50,7 @@ export default function SimulatorSetup() {
     const used = new Set(pickedFlat.map((t) => t.name))
     playoffEntrants.forEach((legs) => legs.forEach((n) => { if (n) used.add(n) }))
     const next = playoffEntrants.map((legs) => [...legs])
-    PLAYOFF_PATHS_48.forEach((path, pathIdx) => {
+    PLAYOFF_PATHS.forEach((path, pathIdx) => {
       path.legs.forEach((conf, legIdx) => {
         if (next[pathIdx][legIdx]) return
         const [pick] = simulateQualifyingForConfederation(conf, 1, Array.from(used), 'playoff-' + pathIdx + '-' + legIdx)
@@ -60,11 +61,11 @@ export default function SimulatorSetup() {
       })
     })
     setPlayoffEntrants(next)
-    setPlayoffResults(PLAYOFF_PATHS_48.map(() => null))
+    setPlayoffResults(PLAYOFF_PATHS.map(() => null))
   }
 
   function simulatePlayoffPath(pathIdx) {
-    const path = PLAYOFF_PATHS_48[pathIdx]
+    const path = PLAYOFF_PATHS[pathIdx]
     const legTeams = playoffEntrants[pathIdx].map((name) => buildTeam(name))
     const result = simulateInterconfedPlayoff(legTeams, 'playoff-' + path.id)
     setPlayoffResults((prev) => prev.map((r, i) => (i === pathIdx ? result : r)))
@@ -104,12 +105,12 @@ export default function SimulatorSetup() {
   const totalNeeded = quotas ? totalFromQuotas(quotas) : 0
   const totalPicked = pickedFlat.length
   const directPicksDone = teamCount && totalPicked === totalNeeded
-  const playoffDone = teamCount === 48 ? playoffResults.every((r) => r) : true
+  const playoffDone = hasPlayoff ? playoffResults.every((r) => r) : true
   const readyToDraw = directPicksDone && playoffDone
 
   function goToDraw() {
     const directNames = pickedFlat.map((t) => t.name)
-    const playoffWinnerNames = teamCount === 48 ? playoffResults.map((r) => r.winner) : []
+    const playoffWinnerNames = hasPlayoff ? playoffResults.map((r) => r.winner) : []
     navigate('/simulator/draw', { state: { teamCount, teamNames: [...directNames, ...playoffWinnerNames] } })
   }
 
@@ -122,15 +123,17 @@ export default function SimulatorSetup() {
           </div>
           <h1 className="font-display text-3xl font-extrabold text-forest dark:text-mint mb-2">Custom World Cup</h1>
           <p className="text-charcoal-600 dark:text-charcoal-300 mb-8">How many teams should compete?</p>
-          <div className="grid sm:grid-cols-2 gap-5">
-            {[32, 48].map((n) => (
+          <div className="grid sm:grid-cols-3 gap-5">
+            {[32, 48, 64].map((n) => (
               <button
                 key={n}
                 onClick={() => setTeamCount(n)}
                 className="rounded-2xl bg-white dark:bg-night-card shadow-depth-lg p-8 hover:-translate-y-1 transition-all"
               >
                 <p className="font-display text-4xl font-extrabold text-emerald">{n}</p>
-                <p className="text-charcoal-600 dark:text-charcoal-300 mt-2">{n === 32 ? 'Classic format (pre-2026)' : '2026 format · 12 groups of 4'}</p>
+                <p className="text-charcoal-600 dark:text-charcoal-300 mt-2">
+                  {n === 32 ? 'Classic format (pre-2026)' : n === 48 ? '2026 format · 12 groups of 4' : 'Expanded format · 16 groups of 4'}
+                </p>
               </button>
             ))}
           </div>
@@ -198,7 +201,7 @@ export default function SimulatorSetup() {
           })}
         </div>
 
-        {teamCount === 48 && directPicksDone && (
+        {hasPlayoff && directPicksDone && (
           <div className="rounded-2xl bg-white dark:bg-night-card shadow-depth p-4 mt-6 space-y-5">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
@@ -207,7 +210,7 @@ export default function SimulatorSetup() {
               </div>
               <SambaButton variant="secondary" size="sm" onClick={autoFillPlayoffEntrants}>Auto-fill Entrants</SambaButton>
             </div>
-            {PLAYOFF_PATHS_48.map((path, pathIdx) => {
+            {PLAYOFF_PATHS.map((path, pathIdx) => {
               const entrants = playoffEntrants[pathIdx]
               const result = playoffResults[pathIdx]
               const allPicked = entrants.every((n) => n)
@@ -275,9 +278,9 @@ export default function SimulatorSetup() {
 
         <div className="sticky bottom-4 mt-6 flex justify-center">
           <SambaButton variant="primary" size="lg" disabled={!readyToDraw} onClick={goToDraw}>
-            {teamCount === 48 && directPicksDone && !playoffDone
+            {hasPlayoff && directPicksDone && !playoffDone
               ? 'Simulate Both Playoff Paths to Continue'
-              : `Continue to Draw (${totalPicked + (teamCount === 48 ? playoffResults.filter(Boolean).length : 0)}/${totalNeeded + (teamCount === 48 ? 2 : 0)})`}
+              : `Continue to Draw (${totalPicked + (hasPlayoff ? playoffResults.filter(Boolean).length : 0)}/${totalNeeded + (hasPlayoff ? 2 : 0)})`}
           </SambaButton>
         </div>
       </div>

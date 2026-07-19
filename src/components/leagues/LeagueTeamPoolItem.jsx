@@ -13,6 +13,17 @@ import ClubBadge from './ClubBadge'
 // on small touch screens. `stopPropagation` keeps the click from also
 // bubbling to the pool container's own "click empty area to unplace"
 // handler.
+//
+// `touch-pan-y` (not `touch-none`) on the draggable node: dnd-kit's
+// TouchSensor already uses a `delay` + `tolerance` activation constraint
+// (see the board's sensor config) specifically so it can tell a scroll
+// gesture apart from a drag -- a touch that moves before the delay elapses
+// is treated as a scroll, one that holds still past it starts a drag. With
+// `touch-none` the browser refuses to scroll at all the instant a finger
+// lands on ANY chip, which is what made the pool feel like it "caught" on
+// every button; `touch-pan-y` lets vertical scrolling pass straight
+// through while still leaving dnd-kit free to claim the gesture once its
+// own delay/tolerance decides it's a drag.
 export default function LeagueTeamPoolItem({ club, accent, selected, onClick }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `pool-${club.key}`,
@@ -30,7 +41,7 @@ export default function LeagueTeamPoolItem({ club, accent, selected, onClick }) 
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-night-card/90 border shadow-depth cursor-grab active:cursor-grabbing select-none touch-none
+      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-night-card/90 border shadow-depth cursor-grab active:cursor-grabbing select-none touch-pan-y
         ${selected ? 'border-blue-500 ring-2 ring-blue-500/50 bg-blue-500/5' : 'border-charcoal-900/10 dark:border-white/10'}
         ${isDragging ? 'opacity-40' : 'hover:-translate-y-0.5 transition-transform'}`}
     >

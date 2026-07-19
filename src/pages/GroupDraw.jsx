@@ -12,7 +12,7 @@ export default function GroupDraw() {
   const { teamCount, teamNames } = location.state || {}
   const teams = useMemo(() => (teamNames ? teamNames.map((n) => buildTeam(n)) : null), [teamNames])
 
-  const groupCount = teamCount === 48 ? 12 : 8
+  const groupCount = teamCount / 4
   const initialGroups = useMemo(
     // Random seed per mount -- every new tournament gets a fresh draw instead
     // of the same groups every time for a given team count.

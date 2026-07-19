@@ -31,6 +31,10 @@ export default function SimulatorPlay() {
     )
   }
 
+  // 48 teams (12 groups) uses the real FIFA Annex-C shape: top 2 plus the 8
+  // best third-place teams fill the Round of 32. 32 and 64 teams (8 and 16
+  // groups) both cleanly divide into a Round of 32/16 with just the top 2
+  // per group -- no third-place ranking needed.
   const format = teamCount === 48
     ? { advancePerGroup: 2, bestThirds: 8, has3rdPlace: true }
     : { advancePerGroup: 2, bestThirds: 0, has3rdPlace: true }

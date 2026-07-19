@@ -138,6 +138,11 @@ export default function LeagueDragBoard({ league, initialOrder, onConfirm }) {
     })
   }
 
+  function handleResetTable() {
+    setTable(Array(slotCount).fill(null))
+    setSelected(null)
+  }
+
   return (
     <div className="space-y-5">
       <DndContext sensors={sensors} onDragEnd={handleDragEnd} autoScroll>
@@ -189,14 +194,23 @@ export default function LeagueDragBoard({ league, initialOrder, onConfirm }) {
       </DndContext>
 
       <div className="space-y-1.5">
-        <SambaButton
-          variant="gold"
-          className="w-full"
-          disabled={!allFilled}
-          onClick={() => onConfirm(table)}
-        >
-          {t('leagues.confirmSelections')}
-        </SambaButton>
+        <div className="flex gap-2">
+          <SambaButton
+            variant="outline"
+            disabled={pool.length === alphaKeys.length}
+            onClick={handleResetTable}
+          >
+            {t('leagues.resetTable')}
+          </SambaButton>
+          <SambaButton
+            variant="gold"
+            className="flex-1"
+            disabled={!allFilled}
+            onClick={() => onConfirm(table)}
+          >
+            {t('leagues.confirmSelections')}
+          </SambaButton>
+        </div>
         {!allFilled && (
           <p className="text-center text-xs text-charcoal-600 dark:text-charcoal-300">
             {t('leagues.confirmRequiresAll', { count: pool.length })}
