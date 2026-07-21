@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import AppBackground from '../../components/AppBackground'
+import AppBackground from '../../components/common/AppBackground'
 
 // Shared chrome for the three legal pages (Privacy/Terms/Cookies) — simple
 // prose layout consistent with the rest of the app's styling.

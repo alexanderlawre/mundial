@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, PointerSensor, TouchSensor, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
 import LeagueTableSlot from './LeagueTableSlot'
 import LeagueTeamPoolItem from './LeagueTeamPoolItem'
-import SambaButton from '../SambaButton'
+import SambaButton from '../common/SambaButton'
 import { alphabeticalClubKeys, clubsByKey, getZoneForRank } from '../../data/leagues'
 import { useTranslation } from '../../lib/i18n'
 

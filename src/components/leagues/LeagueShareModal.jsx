@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import LeagueShareCard from './LeagueShareCard'
-import SambaButton from '../SambaButton'
+import SambaButton from '../common/SambaButton'
 import { captureNode, shareOrDownload } from '../../lib/shareImage'
 import { useTranslation } from '../../lib/i18n'
 
