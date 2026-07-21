@@ -5,18 +5,15 @@ import { useTranslation } from '../../lib/i18n'
 // users can always navigate away without getting stuck. The Home icon lives
 // in the global HeaderControls row (top-right, alongside the theme toggle
 // and language selector) rather than here, so it stays in the same place on
-// every page instead of duplicating per-page.
-//
-// `mt-12` gives the back button/title row enough clearance to clear
-// HeaderControls' fixed top-right icon row (which sits independently of
-// document flow) instead of sharing its vertical band -- without this, a
-// page's title/subtitle renders directly underneath those icons on narrow
-// screens, since both start at roughly the same distance from the top.
+// every page instead of duplicating per-page. Clearance below
+// HeaderControls' fixed icon row is handled once, globally, by
+// AppBackground's content wrapper -- not here -- so every page gets it
+// consistently, including ones with a custom header instead of NavBar.
 export default function NavBar({ title, subtitle, onBack }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   return (
-    <div className="flex items-center gap-3 mt-12">
+    <div className="flex items-center gap-3">
       <button
         onClick={onBack || (() => navigate(-1))}
         aria-label={t('common.back')}

@@ -24,7 +24,20 @@ export default function AppBackground({ children }) {
       <Blob className="bottom-0 -left-16 w-72 h-72 opacity-20 dark:opacity-10 animate-float-slow" color="#3E5C3A" />
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-transparent via-sand/30 to-sand dark:via-night/30 dark:to-night" />
       <HeaderControls />
-      <div className="relative z-10 flex-1">{children}</div>
+      {/* Every page renders its own header content right at the top of this
+          wrapper (via NavBar or a custom h1), so it needs to clear
+          HeaderControls' fixed top-right icon row -- which sits outside
+          document flow at `safe-area + 1rem` and is `w-9 h-9` (2.25rem)
+          tall -- rather than sharing its vertical band. Padding this single
+          shared wrapper (instead of patching every page's own header) is
+          what guarantees every page gets the same clearance, including ones
+          with a custom header instead of NavBar. */}
+      <div
+        className="relative z-10 flex-1"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)' }}
+      >
+        {children}
+      </div>
       <Footer />
     </div>
   )
